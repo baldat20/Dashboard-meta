@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Painel de Metas - Vercel Basic</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: linear-gradient(135deg,#b30000,#ffe066); }
+    #dash { display:none; margin-top:20px; background: rgba(255,255,255,0.95); padding:20px; border-radius:8px; max-width:720px; }
+    input { padding:8px; width:300px; margin-bottom:8px; }
+    button { padding:8px 16px; background:#ffcc00; border:none; border-radius:6px; cursor:pointer; }
+    table { border-collapse:collapse; margin-top:12px; width:100%; }
+    td, th { border:1px solid #ddd; padding:8px; }
+    #metaImg { max-width:100%; height:auto; margin-bottom:12px; }
+  </style>
+</head>
+<body>
+  <h1>Painel de Metas - Versão Básica (Vercel)</h1>
+
+  <div id="login">
+    <input id="usuario" placeholder="Usuário"><br>
+    <input id="senha" type="password" placeholder="Senha"><br>
+    <button onclick="entrar()">Entrar</button>
+    <p id="erro" style="color:red;"></p>
+  </div>
+
+  <div id="dash">
+    <img id="metaImg" src="A_screenshot_of_a_web_application_interface_displa.png" alt="Metas (Auxiliar)" />
+    <h2 id="nome"></h2>
+    <h3 id="cargo"></h3>
+    <div id="dados"></div>
+    <button onclick="sair()">Sair</button>
+  </div>
+
+  <script>
+    async function entrar() {
+      const u = document.getElementById('usuario').value;
+      const s = document.getElementById('senha').value;
+      document.getElementById('erro').innerText = '';
+      try {
+        const params = new URLSearchParams({ usuario: u, senha: s });
+        const res = await fetch('/api/login?' + params.toString());
+        const data = await res.json();
+        if (data.erro) { document.getElementById('erro').innerText = data.erro; return; }
+
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('dash').style.display = 'block';
+        document.getElementById('nome').innerText = data.nome || '';
+        document.getElementById('cargo').innerText = (data.tipo || '').toUpperCase();
+
+        let html = '<table><tbody>';
+        for (let key in data) {
+          if (key === 'tipo' || key === 'nome') continue;
+          html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
+        }
+        html += '</tbody></table>';
+        document.getElementById('dados').innerHTML = html;
+
+        if ((data.tipo || '').toLowerCase() === 'auxiliar') document.getElementById('metaImg').style.display = 'block';
+        else document.getElementById('metaImg').style.display = 'none';
+
+      } catch (e) {
+        document.getElementById('erro').innerText = 'Erro: ' + e.message;
+      }
+    }
+
+    function sair() {
+      document.getElementById('dash').style.display = 'none';
+      document.getElementById('login').style.display = 'block';
+      document.getElementById('usuario').value = '';
+      document.getElementById('senha').value = '';
+    }
+  </script>
+</body>
+</html>
