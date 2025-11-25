@@ -25,7 +25,7 @@
       text-align: center;
     }
 
-    #dash { display:none; width: 720px; }
+    #dash { display:none; width: 800px; }
 
     /* Painel de Metas em preto */
     #login h1 {
@@ -51,6 +51,22 @@
       cursor: pointer;
       font-weight: bold;
     }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+
+    th {
+      background: #f2f2f2;
+      font-weight: bold;
+    }
   </style>
 </head>
 
@@ -65,10 +81,15 @@
   </div>
 
   <div id="dash">
-    <img id="metaImg" src="A_screenshot_of_a_web_application_interface_displa.png" alt="Metas (Auxiliar)" />
+    <img id="metaImg" src="A_screenshot_of_a_web_application_interface_displa.png" 
+         alt="Metas (Auxiliar)" style="display:none; width:300px;"/>
+    
     <h2 id="nome"></h2>
     <h3 id="cargo"></h3>
+    
+    <!-- Onde entram os dados -->
     <div id="dados"></div>
+
     <button onclick="sair()">Sair</button>
   </div>
 
@@ -88,23 +109,70 @@
           return;
         }
 
+        // Exibir tela principal
         document.getElementById('login').style.display = 'none';
         document.getElementById('dash').style.display = 'block';
+
         document.getElementById('nome').innerText = data.nome || '';
         document.getElementById('cargo').innerText = (data.tipo || '').toUpperCase();
 
-        let html = '<table><tbody>';
-        for (let key in data) {
-          if (key === 'tipo' || key === 'nome') continue;
-          html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
-        }
-        html += '</tbody></table>';
-        document.getElementById('dados').innerHTML = html;
+        const tipo = (data.tipo || "").toLowerCase();
 
-        if ((data.tipo || '').toLowerCase() === 'auxiliar') 
-          document.getElementById('metaImg').style.display = 'block';
-        else 
+        // --------------------------
+        //  ANALISTA E AUXILIAR
+        // --------------------------
+        if (tipo === 'analista' || tipo === 'auxiliar') {
+          let html = "<table><tbody>";
+
+          for (let key in data) {
+            if (['tipo', 'nome'].includes(key)) continue;
+            html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
+          }
+
+          html += "</tbody></table>";
+          document.getElementById('dados').innerHTML = html;
+
+          if (tipo === 'auxiliar') 
+            document.getElementById('metaImg').style.display = 'block';
+          else 
+            document.getElementById('metaImg').style.display = 'none';
+
+          return;
+        }
+
+
+        // ----------------------------------------
+        // SUPERVISÃO / COORDENAÇÃO → LISTA GERAL
+        // ----------------------------------------
+        if (Array.isArray(data.subordinados)) {
           document.getElementById('metaImg').style.display = 'none';
+
+          let html = `
+            <h3>Equipe</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Cargo</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+
+          for (let pessoa of data.subordinados) {
+            html += `
+              <tr>
+                <td>${pessoa.nome}</td>
+                <td>${pessoa.cargo}</td>
+                <td>${pessoa.status}</td>
+              </tr>
+            `;
+          }
+
+          html += "</tbody></table>";
+          document.getElementById('dados').innerHTML = html;
+        }
 
       } catch (e) {
         document.getElementById('erro').innerText = 'Erro: ' + e.message;
@@ -116,6 +184,7 @@
       document.getElementById('login').style.display = 'block';
       document.getElementById('usuario').value = '';
       document.getElementById('senha').value = '';
+      document.getElementById('dados').innerHTML = '';
     }
   </script>
 
