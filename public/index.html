@@ -14,7 +14,7 @@
   </style>
 </head>
 <body>
-  <h1>Painel de Metas - Versão Básica (Vercel)</h1>
+  <h1>Painel de Metas </h1>
 
   <div id="login">
     <input id="usuario" placeholder="Usuário"><br>
@@ -31,6 +31,56 @@
     <button onclick="sair()">Sair</button>
   </div>
 
+    <h3>Metas - Auxiliar</h3>
+
+      <table style="width:100%; border-collapse: collapse;">
+        <tr style="background:#FFFFFF; font-weight:bold;">
+          <td>INDICADOR</td>
+          <td>%</td>
+          <td>EFICIÊNCIA</td>
+          <td>24H</td>
+          <td>% ABS</td>
+          <td>FAIXA</td>
+        </tr>
+
+        <tr style="background:#AC4FDE; font-weight:bold;">
+          <td>SUPERAÇÃO</td>
+          <td>110%</td>
+          <td>≥ 86.9%</td>
+          <td>≥ 90%</td>
+          <td>≤ 10%</td>
+          <td>≥ 60%</td>
+        </tr>
+
+        <tr style="background:#4CE645; font-weight:bold;">
+          <td>DEFINIDA</td>
+          <td>100%</td>
+          <td>≥ 81.9%</td>
+          <td>≥ 85%</td>
+          <td>≤ 10%</td>
+          <td>≥ 40%</td>
+        </tr>
+
+        <tr style="background:#FFE236; font-weight:bold;">
+          <td>TOLERÁVEL</td>
+          <td>50%</td>
+          <td>≥ 76.9%</td>
+          <td>≥ 80%</td>
+          <td>≤ 10%</td>
+          <td>≥ 20%</td>
+        </tr>
+
+        <tr style="background:#F73434;font-weight:bold;">
+          <td>INSUFICIENTE</td>
+          <td>0%</td>
+          <td>&lt; 76.9%</td>
+          <td>&lt; 80%</td>
+          <td>&gt; 10%</td>
+          <td>&lt; 20%</td>
+        </tr>
+      </table>
+    </div>
+  
   <script>
     async function entrar() {
       const u = document.getElementById('usuario').value;
