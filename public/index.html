@@ -14,7 +14,7 @@
   </style>
 </head>
 <body>
-  <h1>Painel de Metas </h1>
+  <h1> Painel de Metas </h1>
 
   <div id="login">
     <input id="usuario" placeholder="Usuário"><br>
@@ -31,8 +31,6 @@
     <button onclick="sair()">Sair</button>
   </div>
 
-    
-  
   <script>
     async function entrar() {
       const u = document.getElementById('usuario').value;
@@ -59,13 +57,6 @@
 
         if ((data.tipo || '').toLowerCase() === 'auxiliar') document.getElementById('metaImg').style.display = 'block';
         else document.getElementById('metaImg').style.display = 'none';
-
-        
-  
-  <script>
-    async function entrar() {
-      const u = document.getElementById('usuario').value;
-      const s = document.getElementBy
 
       } catch (e) {
         document.getElementById('erro').innerText = 'Erro: ' + e.message;
