@@ -4,19 +4,77 @@
   <meta charset="UTF-8">
   <title>Painel de Metas - Vercel Basic</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: linear-gradient(135deg,#b30000,#ffe066); }
-    #dash { display:none; margin-top:20px; background: rgba(255,255,255,0.95); padding:20px; border-radius:8px; max-width:720px; }
-    input { padding:8px; width:300px; margin-bottom:8px; }
-    button { padding:8px 16px; background:#ffcc00; border:none; border-radius:6px; cursor:pointer; }
-    table { border-collapse:collapse; margin-top:12px; width:100%; }
-    td, th { border:1px solid #ddd; padding:8px; }
-    #metaImg { max-width:100%; height:auto; margin-bottom:12px; }
+    /* Fundo com degradê suave e uniforme */
+    body { 
+      font-family: Arial, sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #b30000 0%, #ffe066 100%);
+      background-attachment: fixed;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #fff;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+
+    #login, #dash {
+      background: rgba(255,255,255,0.95);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.2);
+      width: 360px;
+      text-align: center;
+    }
+
+    #dash { display:none; width: 720px; }
+
+    input {
+      padding: 10px;
+      width: 90%;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #ffcc00;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    table {
+      border-collapse: collapse; 
+      margin-top: 12px; 
+      width: 100%; 
+    }
+
+    td, th {
+      border: 1px solid #ddd; 
+      padding: 8px;
+    }
+
+    #metaImg { 
+      max-width: 100%; 
+      height: auto; 
+      margin-bottom: 12px; 
+      border-radius: 8px;
+    }
   </style>
 </head>
+
 <body>
-  <h1> Painel de Metas </h1>
 
   <div id="login">
+    <h1>Painel de Metas</h1>
     <input id="usuario" placeholder="Usuário"><br>
     <input id="senha" type="password" placeholder="Senha"><br>
     <button onclick="entrar()">Entrar</button>
@@ -36,11 +94,16 @@
       const u = document.getElementById('usuario').value;
       const s = document.getElementById('senha').value;
       document.getElementById('erro').innerText = '';
+
       try {
         const params = new URLSearchParams({ usuario: u, senha: s });
         const res = await fetch('/api/login?' + params.toString());
         const data = await res.json();
-        if (data.erro) { document.getElementById('erro').innerText = data.erro; return; }
+
+        if (data.erro) {
+          document.getElementById('erro').innerText = data.erro;
+          return;
+        }
 
         document.getElementById('login').style.display = 'none';
         document.getElementById('dash').style.display = 'block';
@@ -55,8 +118,10 @@
         html += '</tbody></table>';
         document.getElementById('dados').innerHTML = html;
 
-        if ((data.tipo || '').toLowerCase() === 'auxiliar') document.getElementById('metaImg').style.display = 'block';
-        else document.getElementById('metaImg').style.display = 'none';
+        if ((data.tipo || '').toLowerCase() === 'auxiliar') 
+          document.getElementById('metaImg').style.display = 'block';
+        else 
+          document.getElementById('metaImg').style.display = 'none';
 
       } catch (e) {
         document.getElementById('erro').innerText = 'Erro: ' + e.message;
@@ -70,5 +135,6 @@
       document.getElementById('senha').value = '';
     }
   </script>
+
 </body>
 </html>
