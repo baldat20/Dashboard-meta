@@ -31,9 +31,36 @@
     <button onclick="sair()">Sair</button>
   </div>
 
-    <h3>Metas - Auxiliar</h3>
+    
+  
+  <script>
+    async function entrar() {
+      const u = document.getElementById('usuario').value;
+      const s = document.getElementById('senha').value;
+      document.getElementById('erro').innerText = '';
+      try {
+        const params = new URLSearchParams({ usuario: u, senha: s });
+        const res = await fetch('/api/login?' + params.toString());
+        const data = await res.json();
+        if (data.erro) { document.getElementById('erro').innerText = data.erro; return; }
 
-      <table style="width:100%; border-collapse: collapse;">
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('dash').style.display = 'block';
+        document.getElementById('nome').innerText = data.nome || '';
+        document.getElementById('cargo').innerText = (data.tipo || '').toUpperCase();
+
+        let html = '<table><tbody>';
+        for (let key in data) {
+          if (key === 'tipo' || key === 'nome') continue;
+          html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
+        }
+        html += '</tbody></table>';
+        document.getElementById('dados').innerHTML = html;
+
+        if ((data.tipo || '').toLowerCase() === 'auxiliar') document.getElementById('metaImg').style.display = 'block';
+        else document.getElementById('metaImg').style.display = 'none';
+
+           <table style="width:100%; border-collapse: collapse;">
         <tr style="background:#FFFFFF; font-weight:bold;">
           <td>INDICADOR</td>
           <td>%</td>
@@ -84,29 +111,7 @@
   <script>
     async function entrar() {
       const u = document.getElementById('usuario').value;
-      const s = document.getElementById('senha').value;
-      document.getElementById('erro').innerText = '';
-      try {
-        const params = new URLSearchParams({ usuario: u, senha: s });
-        const res = await fetch('/api/login?' + params.toString());
-        const data = await res.json();
-        if (data.erro) { document.getElementById('erro').innerText = data.erro; return; }
-
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('dash').style.display = 'block';
-        document.getElementById('nome').innerText = data.nome || '';
-        document.getElementById('cargo').innerText = (data.tipo || '').toUpperCase();
-
-        let html = '<table><tbody>';
-        for (let key in data) {
-          if (key === 'tipo' || key === 'nome') continue;
-          html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
-        }
-        html += '</tbody></table>';
-        document.getElementById('dados').innerHTML = html;
-
-        if ((data.tipo || '').toLowerCase() === 'auxiliar') document.getElementById('metaImg').style.display = 'block';
-        else document.getElementById('metaImg').style.display = 'none';
+      const s = document.getElementBy
 
       } catch (e) {
         document.getElementById('erro').innerText = 'Erro: ' + e.message;
