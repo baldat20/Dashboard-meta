@@ -4,7 +4,7 @@ async function acessarPlanilha() {
   const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY && process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n") || "",
     },
     scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
   });
@@ -14,9 +14,18 @@ async function acessarPlanilha() {
 
 module.exports = async (req, res) => {
   try {
+    // Configurar CORS se necessário
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+
     const query = req.method === "GET" ? req.query : req.body;
-    const usuario = query.usuario;
-    const senha = query.senha;
+    const usuario = query?.usuario;
+    const senha = query?.senha;
 
     if (!usuario || !senha) {
       return res.status(400).json({ erro: "Credenciais faltando." });
@@ -27,7 +36,6 @@ module.exports = async (req, res) => {
     // ---------------------------------------------------
     // INDICADORES PRÉ-DEFINIDOS
     // ---------------------------------------------------
-
     const indicadoresAnalistas = [
       { indicador: "SUPERAÇÃO", percentual: "110%", TMA: "00:08:00", TME: "00:00:35", tempoProd: "06:20:00", abs: "10%" },
       { indicador: "DEFINIDA", percentual: "100%", TMA: "00:08:40", TME: "00:00:45", tempoProd: "06:20:00", abs: "10%" },
@@ -43,52 +51,62 @@ module.exports = async (req, res) => {
     // ---------------------------------------------------
     // 1) LOGIN COMO ANALISTA
     // ---------------------------------------------------
-    const analistas = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.SHEET_ID,
-      range: "Relatorio Analistas!A2:O",
-    });
+    try {
+      const analistas = await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.SHEET_ID,
+        range: "Relatorio Analistas!A2:O",
+      });
 
-    for (let row of analistas.data.values || []) {
-      if (row[0] === usuario && row[1] === senha) {
-        return res.json({
-          tipo: "analista",
-          nome: row[0],
-          TMA: row[4],
-          TME: row[5],
-          TempoProdutivo: row[6],
-          PercentualABS: row[7],
-          PercentualSalario: row[13],
-          Nivel: row[14],
-          Status: row[14] ?? "",
-
-          indicadores: indicadoresAnalistas
-        });
+      const rowsAnalistas = analistas.data.values || [];
+      
+      for (let row of rowsAnalistas) {
+        if (row[0] === usuario && row[1] === senha) {
+          return res.json({
+            tipo: "analista",
+            nome: row[0] || "",
+            TMA: row[4] || "",
+            TME: row[5] || "",
+            TempoProdutivo: row[6] || "",
+            PercentualABS: row[7] || "",
+            PercentualSalario: row[13] || "",
+            Nivel: row[14] || "",
+            Status: row[14] || "",
+            indicadores: indicadoresAnalistas
+          });
+        }
       }
+    } catch (sheetError) {
+      console.error("Erro ao acessar planilha de analistas:", sheetError);
     }
 
     // ---------------------------------------------------
     // 2) LOGIN COMO AUXILIAR
     // ---------------------------------------------------
-    const auxiliares = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.SHEET_ID,
-      range: "Relatorio Auxiliares!A2:K",
-    });
+    try {
+      const auxiliares = await sheets.spreadsheets.values.get({
+        spreadsheetId: process.env.SHEET_ID,
+        range: "Relatorio Auxiliares!A2:K",
+      });
 
-    for (let row of auxiliares.data.values || []) {
-      if (row[0] === usuario && row[1] === senha) {
-        return res.json({
-          tipo: "auxiliar",
-          nome: row[0],
-          EFICIENCIA: row[2],
-          VREP: row[3],
-          PercentualABS: row[4],
-          PercentualSalario: row[9],
-          Nivel: row[10],
-          Status: row[10] ?? "",
-
-          indicadores: indicadoresAuxiliares
-        });
+      const rowsAuxiliares = auxiliares.data.values || [];
+      
+      for (let row of rowsAuxiliares) {
+        if (row[0] === usuario && row[1] === senha) {
+          return res.json({
+            tipo: "auxiliar",
+            nome: row[0] || "",
+            EFICIENCIA: row[2] || "",
+            VREP: row[3] || "",
+            PercentualABS: row[4] || "",
+            PercentualSalario: row[9] || "",
+            Nivel: row[10] || "",
+            Status: row[10] || "",
+            indicadores: indicadoresAuxiliares
+          });
+        }
       }
+    } catch (sheetError) {
+      console.error("Erro ao acessar planilha de auxiliares:", sheetError);
     }
 
     // ---------------------------------------------------
@@ -98,6 +116,6 @@ module.exports = async (req, res) => {
 
   } catch (e) {
     console.error("Erro API /api/login:", e);
-    return res.status(500).json({ erro: e.message });
+    return res.status(500).json({ erro: "Erro interno do servidor." });
   }
 };
