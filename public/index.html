@@ -15,7 +15,6 @@
     --radius: 12px;
   }
 
-  /* === LOGIN CENTRALIZADO NA TELA === */
   html,body{
     height:100%;
     margin:0;
@@ -24,11 +23,9 @@
     align-items:center;
     font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;
     background:linear-gradient(135deg,var(--bg1) 0%, #ef8e3b 40%, #f6a44a 100%);
-    -webkit-font-smoothing:antialiased;
     color:#111;
   }
 
-  /* Wrapper centralizado — removido margin-top */
   .wrap{
     max-width:1100px;
     padding:18px;
@@ -85,11 +82,9 @@
   .btn { padding:10px 16px; border-radius:10px; border:none; cursor:pointer; font-weight:700; background:#ffcc00; }
   .error { color:#b91c1c; text-align:left; font-size:0.95rem; margin-top:6px; }
 
-
-  /* === DASHBOARD — NÃO CENTRALIZAR === */
   #dashboardArea {
     display:none;
-    align-self: stretch; /* impede centralização vertical do dashboard */
+    align-self: stretch;
     width:100%;
     margin-top:30px;
   }
@@ -101,11 +96,8 @@
     gap:18px;
   }
 
-
-  /* left column (main) */
   .main-col { display:flex; flex-direction:column; gap:14px; }
 
-  /* user info card */
   .user-card {
     padding:18px;
     border-radius:10px;
@@ -121,12 +113,7 @@
 
   .meta-img { width:140px; height:84px; object-fit:cover; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
 
-  /* indicators reference table (big) */
-  .indicators {
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:12px;
-  }
+  .indicators { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
 
   .indicator-card {
     padding:12px;
@@ -138,28 +125,13 @@
   .indicator-card h4 { margin:0 0 8px 0; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.6px; }
   .indicator-grid { width:100%; border-collapse:collapse; font-size:0.92rem; }
   .indicator-grid th, .indicator-grid td { padding:6px 8px; text-align:left; border-bottom:1px solid rgba(0,0,0,0.04); }
-  .indicator-grid thead th { font-weight:800; color:#222; background:transparent; border-bottom:2px solid rgba(0,0,0,0.06); }
+  .indicator-grid thead th { font-weight:800; color:#222; border-bottom:2px solid rgba(0,0,0,0.06); }
 
-  /* status colors */
-  .status-super { background:linear-gradient(90deg,#e6ffef,#ddffec); color:#063; font-weight:700; }
-  .status-def { background:linear-gradient(90deg,#e8f1ff,#e1ecff); color:#1e3a8a; font-weight:700; }
-  .status-tol { background:linear-gradient(90deg,#fffbe6,#fff6d6); color:#a16207; font-weight:700; }
-  .status-nao { background:linear-gradient(90deg,#ffecec,#ffdede); color:#7f1d1d; font-weight:700; }
+  .status-super { background:#d9fbe9; color:#0f5132; font-weight:700; }
+  .status-def { background:#e0ecff; color:#1e3a8a; font-weight:700; }
+  .status-tol { background:#fff6d1; color:#a16207; font-weight:700; }
+  .status-nao { background:#ffd4d4; color:#842029; font-weight:700; }
 
-  /* right column */
-  .summary {
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-  }
-
-  .summary .card { padding:14px; text-align:center; }
-
-  .data-table { width:100%; border-collapse:collapse; }
-  .data-table th, .data-table td { text-align:left; padding:8px; border-bottom:1px solid rgba(0,0,0,0.05); }
-  .data-table th { background:transparent; font-weight:800; color:#333; }
-
-  /* small screens */
   @media (max-width:900px){
     .dashboard{ grid-template-columns: 1fr; }
     .indicators { grid-template-columns: 1fr; }
@@ -167,79 +139,42 @@
   }
 </style>
 </head>
-
 <body>
 
-  <!-- LOGIN -->
-  <div class="wrap">
-    <div class="card login-card">
-      <div style="flex:1">
-        <h1 class="title">Painel de Metas</h1>
-        <p class="subtitle">Acesse seus indicadores </p>
-      </div>
-
-      <div class="login-box">
-        <input id="usuario" placeholder="Usuário (ex: JOSE SILVA)" />
-        <input id="senha" type="password" placeholder="Senha (ex: 123456)" />
-        <div class="login-actions">
-          <div class="error" id="erro"></div>
-          <button class="btn" onclick="entrar()">Entrar</button>
-        </div>
+<div class="wrap">
+  <div class="card login-card">
+    <div style="flex:1">
+      <h1 class="title">Painel de Metas</h1>
+      <p class="subtitle">Acesse seus indicadores</p>
+    </div>
+    <div class="login-box">
+      <input id="usuario" placeholder="Usuário" />
+      <input id="senha" type="password" placeholder="Senha" />
+      <div class="login-actions">
+        <div class="error" id="erro"></div>
+        <button class="btn" onclick="entrar()">Entrar</button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- DASHBOARD -->
-  <div id="dashboardArea" class="dashboard">
-
-    <!-- main column -->
-    <div class="main-col">
-
-      <!-- user header -->
-      <div class="card user-card">
-        <div class="user-left">
-          <div class="user-role" id="userRole">ANALISTA COP</div>
-          <div class="user-name" id="userName">NOME DO USUÁRIO</div>
-        </div>
-        <div style="text-align:center;">
-          <img id="metaImg" class="meta-img" src="" alt="Metas" style="display:none;" />
-          <div style="margin-top:8px;">
-            <button class="btn" onclick="sair()">Sair</button>
-          </div>
-        </div>
+<div id="dashboardArea" class="dashboard">
+  <div class="main-col">
+    <div class="card user-card">
+      <div class="user-left">
+        <div class="user-role" id="userRole"></div>
+        <div class="user-name" id="userName"></div>
       </div>
-
-      <!-- indicators -->
-      <div id="indicatorsContainer" class="indicators"></div>
-
-      <!-- personal metrics -->
-      <div id="personalMetrics" class="card"></div>
-
+      <div><button class="btn" onclick="sair()">Sair</button></div>
     </div>
 
-    <!-- right column -->
-    <aside class="summary">
-      <div class="card">
-        <h4 style="margin:0 0 8px 0">Resumo Rápido</h4>
-        <table class="data-table">
-          <tbody id="summaryTable"></tbody>
-        </table>
-      </div>
-
-      <div class="card">
-        <h4 style="margin:0 0 8px 0">Observações</h4>
-        <div style="color:var(--muted);font-size:0.95rem;">
-          Valores de referência mostrados acima. Consulte seu supervisor para dúvidas.
-        </div>
-      </div>
-    </aside>
+    <div id="indicatorsContainer" class="indicators"></div>
+    <div id="personalMetrics" class="card"></div>
   </div>
+</div>
 
 <script>
-  /* === O SEU JS COMPLETO — NÃO modifiquei nada === */
-  // (mantive igual ao original)
-  // ...
-  // (para economizar espaço aqui, posso te entregar a versão completa se quiser)
+// JS será atualizado depois da sua confirmação
 </script>
 
 </body>
