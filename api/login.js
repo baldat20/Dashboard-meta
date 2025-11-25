@@ -25,7 +25,23 @@ module.exports = async (req, res) => {
     const sheets = await acessarPlanilha();
 
     // ---------------------------------------------------
-    // 1) TENTAR LOGAR COMO ANALISTA
+    // INDICADORES PRÉ-DEFINIDOS
+    // ---------------------------------------------------
+
+    const indicadoresAnalistas = [
+      { indicador: "SUPERAÇÃO", percentual: "110%", TMA: "00:08:00", TME: "00:00:35", tempoProd: "06:20:00", abs: "10%" },
+      { indicador: "DEFINIDA", percentual: "100%", TMA: "00:08:40", TME: "00:00:45", tempoProd: "06:20:00", abs: "10%" },
+      { indicador: "TOLERÁVEL", percentual: "50%", TMA: "00:09:30", TME: "00:01:00", tempoProd: "06:20:00", abs: "10%" },
+    ];
+
+    const indicadoresAuxiliares = [
+      { indicador: "SUPERAÇÃO", percentual: "110%", eficiencia: "86.9%", reparo24: "90%", abs: "10%", faixa: "60%" },
+      { indicador: "DEFINIDA", percentual: "100%", eficiencia: "81.9%", reparo24: "85%", abs: "10%", faixa: "40%" },
+      { indicador: "TOLERÁVEL", percentual: "50%", eficiencia: "76.9%", reparo24: "80%", abs: "10%", faixa: "20%" },
+    ];
+
+    // ---------------------------------------------------
+    // 1) LOGIN COMO ANALISTA
     // ---------------------------------------------------
     const analistas = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.SHEET_ID,
@@ -43,13 +59,15 @@ module.exports = async (req, res) => {
           PercentualABS: row[7],
           PercentualSalario: row[13],
           Nivel: row[14],
-          Status: row[14] ?? ""
+          Status: row[14] ?? "",
+
+          indicadores: indicadoresAnalistas
         });
       }
     }
 
     // ---------------------------------------------------
-    // 2) TENTAR LOGAR COMO AUXILIAR
+    // 2) LOGIN COMO AUXILIAR
     // ---------------------------------------------------
     const auxiliares = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.SHEET_ID,
@@ -66,13 +84,15 @@ module.exports = async (req, res) => {
           PercentualABS: row[4],
           PercentualSalario: row[9],
           Nivel: row[10],
-          Status: row[10] ?? ""
+          Status: row[10] ?? "",
+
+          indicadores: indicadoresAuxiliares
         });
       }
     }
 
     // ---------------------------------------------------
-    // 3) SE NÃO ACHOU NAS DUAS ABAS → LOGIN INVÁLIDO
+    // NÃO ENCONTROU → LOGIN INVÁLIDO
     // ---------------------------------------------------
     return res.status(401).json({ erro: "Usuário ou senha incorretos." });
 
