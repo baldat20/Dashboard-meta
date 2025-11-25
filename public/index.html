@@ -1,219 +1,384 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Painel de Metas </title>
-  <style>
-    /* Fundo com degradê suave e uniforme */
-    body { 
-      font-family: Arial, sans-serif;
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #b30000 0%, #ffe066 100%);
-      background-attachment: fixed;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Painel de Metas — Dashboard</title>
+<style>
+  :root{
+    --bg1: #b30000;
+    --bg2: #ffb566;
+    --card-bg: rgba(255,255,255,0.98);
+    --muted:#666;
+    --glass: rgba(255,255,255,0.85);
+    --radius: 12px;
+  }
 
-    #login, #dash {
-      background: rgba(255,255,255,0.95);
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 18px rgba(0,0,0,0.2);
-      width: 360px;
-      text-align: center;
-    }
+  html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;background:linear-gradient(135deg,var(--bg1) 0%, #ef8e3b 40%, #f6a44a 100%); -webkit-font-smoothing:antialiased; color:#111;}
 
-    #dash { display:none; width: 800px; }
+  .wrap{
+    max-width:1100px;
+    margin:36px auto;
+    padding:18px;
+  }
 
-    /* Painel de Metas em preto */
-    #login h1 {
-      color: #000 !important;
-      text-shadow: none !important;
-    }
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    padding:18px;
+  }
 
-    /* Inputs em negrito */
-    #login input {
-      padding: 10px;
-      width: 90%;
-      margin-bottom: 12px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-weight: bold;
-    }
+  .login-card {
+    width:100%;
+    display:flex;
+    gap:18px;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
 
-    button {
-      padding: 10px 20px;
-      background: #ffcc00;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+  .title {
+    text-align:center;
+    margin:0 0 8px 0;
+    font-size:1.6rem;
+    letter-spacing:1px;
+    font-weight:700;
+  }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
+  .subtitle { text-align:center; margin:0 0 16px 0; color:var(--muted); font-weight:600; }
 
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-    }
+  .login-box {
+    flex:1 1 420px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
 
-    th {
-      background: #f2f2f2;
-      font-weight: bold;
-    }
+  .login-box input{
+    padding:12px 14px;
+    border-radius:10px;
+    border:1px solid #ddd;
+    font-weight:700;
+    width:100%;
+    box-sizing:border-box;
+  }
 
-    /* Estilo dos status */
-    .status-box {
-      font-weight: bold;
-      padding: 6px 10px;
-      border-radius: 6px;
-      text-align: center;
-      text-transform: uppercase;
-    }
-  </style>
+  .login-actions { display:flex; gap:12px; align-items:center; justify-content:flex-end; }
+  .btn { padding:10px 16px; border-radius:10px; border:none; cursor:pointer; font-weight:700; background:#ffcc00; }
+  .error { color:#b91c1c; text-align:left; font-size:0.95rem; margin-top:6px; }
+
+  /* Dashboard layout */
+  .dashboard {
+    margin-top:18px;
+    display:grid;
+    grid-template-columns: 1fr 360px;
+    gap:18px;
+  }
+
+  /* left column (main) */
+  .main-col { display:flex; flex-direction:column; gap:14px; }
+
+  /* user info card */
+  .user-card {
+    padding:18px;
+    border-radius:10px;
+    display:flex;
+    gap:16px;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  .user-left { flex:1; }
+  .user-role { color:var(--muted); font-weight:700; margin-bottom:6px; text-align:center; }
+  .user-name { font-size:1.15rem; font-weight:800; text-align:center; }
+
+  .meta-img { width:140px; height:84px; object-fit:cover; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+
+  /* indicators reference table (big) */
+  .indicators {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+  }
+
+  .indicator-card {
+    padding:12px;
+    border-radius:10px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.90));
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  }
+
+  .indicator-card h4 { margin:0 0 8px 0; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.6px; }
+  .indicator-grid { width:100%; border-collapse:collapse; font-size:0.92rem; }
+  .indicator-grid th, .indicator-grid td { padding:6px 8px; text-align:left; border-bottom:1px solid rgba(0,0,0,0.04); }
+  .indicator-grid thead th { font-weight:800; color:#222; background:transparent; border-bottom:2px solid rgba(0,0,0,0.06); }
+
+  /* status colors row */
+  .status-super { background:linear-gradient(90deg,#e6ffef,#ddffec); color:#063; font-weight:700; }
+  .status-def { background:linear-gradient(90deg,#e8f1ff,#e1ecff); color:#1e3a8a; font-weight:700; }
+  .status-tol { background:linear-gradient(90deg,#fffbe6,#fff6d6); color:#a16207; font-weight:700; }
+  .status-nao { background:linear-gradient(90deg,#ffecec,#ffdede); color:#7f1d1d; font-weight:700; }
+
+  /* right column (summary card) */
+  .summary {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .summary .card { padding:14px; text-align:center; }
+
+  .data-table { width:100%; border-collapse:collapse; }
+  .data-table th, .data-table td { text-align:left; padding:8px; border-bottom:1px solid rgba(0,0,0,0.05); }
+  .data-table th { background:transparent; font-weight:800; color:#333; }
+
+  /* small screens */
+  @media (max-width:900px){
+    .dashboard{ grid-template-columns: 1fr; }
+    .indicators { grid-template-columns: 1fr; }
+    .login-card { flex-direction:column; align-items:stretch; }
+  }
+</style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div class="card login-card">
+      <div style="flex:1">
+        <h1 class="title">Painel de Metas</h1>
+        <p class="subtitle">Acesse seus indicadores — Analistas / Auxiliares</p>
+      </div>
 
-  <div id="login">
-    <h1>Painel de Metas</h1>
-    <input id="usuario" placeholder="Usuário"><br>
-    <input id="senha" type="password" placeholder="Senha"><br>
-    <button onclick="entrar()">Entrar</button>
-    <p id="erro" style="color:red;"></p>
+      <div class="login-box">
+        <input id="usuario" placeholder="Usuário (ex: JOSE SILVA)" />
+        <input id="senha" type="password" placeholder="Senha (ex: 123456)" />
+        <div class="login-actions">
+          <div class="error" id="erro"></div>
+          <button class="btn" onclick="entrar()">Entrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboardArea" style="display:none" class="dashboard">
+
+      <!-- main column -->
+      <div class="main-col">
+
+        <!-- user header -->
+        <div class="card user-card">
+          <div class="user-left">
+            <div class="user-role" id="userRole">ANALISTA COP</div>
+            <div class="user-name" id="userName">NOME DO USUÁRIO</div>
+          </div>
+          <div style="text-align:center;">
+            <!-- image (local teste) -->
+            <img id="metaImg" class="meta-img" src="/mnt/data/b59bb5e1-a32d-494a-9c69-ecfe87955274.png" alt="Metas" style="display:none;" />
+            <div style="margin-top:8px;">
+              <button class="btn" onclick="sair()">Sair</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- indicators reference -->
+        <div id="indicatorsContainer" class="indicators">
+          <!-- will be populated by JS -->
+        </div>
+
+        <!-- personal metrics card -->
+        <div id="personalMetrics" class="card">
+          <!-- will be populated -->
+        </div>
+
+      </div>
+
+      <!-- right column -->
+      <aside class="summary">
+        <div class="card">
+          <h4 style="margin:0 0 8px 0">Resumo Rápido</h4>
+          <table class="data-table">
+            <tbody id="summaryTable">
+              <!-- filled by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h4 style="margin:0 0 8px 0">Observações</h4>
+          <div style="color:var(--muted);font-size:0.95rem;">
+            Valores de referência mostrados acima. Consulte seu supervisor para dúvidas.
+          </div>
+        </div>
+      </aside>
+    </div>
   </div>
 
-  <div id="dash">
-    <img id="metaImg" src="A_screenshot_of_a_web_application_interface_displa.png" 
-         alt="Metas (Auxiliar)" style="display:none; width:300px;"/>
-    
-    <h2 id="nome"></h2>
-    <h3 id="cargo"></h3>
-    
-    <div id="dados"></div>
+<script>
+  // ----- indicador padrão (mesmo que na API)
+  const indicadoresAnalistas = [
+    { indicador: "SUPERAÇÃO", percentual: "110%", TMA: "00:08:00", TME: "00:00:35", tempoProd: "06:20:00", abs: "10%" , css:"status-super" },
+    { indicador: "DEFINIDA", percentual: "100%", TMA: "00:08:40", TME: "00:00:45", tempoProd: "06:20:00", abs: "10%", css:"status-def" },
+    { indicador: "TOLERÁVEL", percentual: "50%", TMA: "00:09:30", TME: "00:01:00", tempoProd: "06:20:00", abs: "10%", css:"status-tol" },
+  ];
 
-    <button onclick="sair()">Sair</button>
-  </div>
+  const indicadoresAuxiliares = [
+    { indicador: "SUPERAÇÃO", percentual: "110%", eficiencia: "86.9%", reparo24: "90%", abs:"10%", faixa:"60%", css:"status-super" },
+    { indicador: "DEFINIDA", percentual: "100%", eficiencia: "81.9%", reparo24: "85%", abs:"10%", faixa:"40%", css:"status-def" },
+    { indicador: "TOLERÁVEL", percentual: "50%", eficiencia: "76.9%", reparo24: "80%", abs:"10%", faixa:"20%", css:"status-tol" },
+  ];
 
-  <script>
+  function escapeHtml(s){ if(!s) return ""; return String(s).replace(/[&<>"'`=\/]/g, function(ch){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'})[ch]; }); }
 
-    /* MAPA DE CORES DOS STATUS */
-    const statusColors = {
-      "Superação": "background:#16a34a; color:white;",   // verde
-      "Definida": "background:#2563eb; color:white;",    // azul
-      "Tolerável": "background:#facc15; color:black;",   // amarelo
-      "Não atingiu": "background:#dc2626; color:white;", // vermelho
-    };
+  function montarIndicadoresAnalista(){
+    const cont = document.getElementById('indicatorsContainer');
+    cont.innerHTML = "";
+    indicadoresAnalistas.forEach(ind=>{
+      const card = document.createElement('div');
+      card.className = 'indicator-card';
+      card.innerHTML = `
+        <h4>${escapeHtml(ind.indicador)}</h4>
+        <table class="indicator-grid">
+          <thead><tr><th>%</th><th>TMA</th><th>TME (CHAT)</th><th>TEMPO PROD</th><th>% ABS</th></tr></thead>
+          <tbody>
+            <tr class="${ind.css}">
+              <td>${ind.percentual}</td>
+              <td>${ind.TMA}</td>
+              <td>${ind.TME}</td>
+              <td>${ind.tempoProd}</td>
+              <td>${ind.abs}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+      cont.appendChild(card);
+    });
+  }
 
-    function aplicarCorStatus(status) {
-      const estilo = statusColors[status] || "background:#999; color:white;";
-      return `<div class="status-box" style="${estilo}">${status}</div>`;
+  function montarIndicadoresAuxiliar(){
+    const cont = document.getElementById('indicatorsContainer');
+    cont.innerHTML = "";
+    indicadoresAuxiliares.forEach(ind=>{
+      const card = document.createElement('div');
+      card.className = 'indicator-card';
+      card.innerHTML = `
+        <h4>${escapeHtml(ind.indicador)}</h4>
+        <table class="indicator-grid">
+          <thead><tr><th>%</th><th>EFICIÊNCIA</th><th>REPARO 24H</th><th>% ABS</th><th>FAIXA ATINGIMENTO</th></tr></thead>
+          <tbody>
+            <tr class="${ind.css}">
+              <td>${ind.percentual}</td>
+              <td>${ind.eficiencia}</td>
+              <td>${ind.reparo24}</td>
+              <td>${ind.abs}</td>
+              <td>${ind.faixa}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+      cont.appendChild(card);
+    });
+  }
+
+  function mostrarResumo(obj){
+    const tbody = document.getElementById('summaryTable');
+    tbody.innerHTML = "";
+    if(obj.tipo === 'analista'){
+      addRow('TMA', obj.TMA || '—');
+      addRow('TME', obj.TME || '—');
+      addRow('Tempo Produtivo', obj.TempoProdutivo || '—');
+      addRow('% ABS', obj.PercentualABS || '—');
+      addRow('Nível', obj.Nivel || '—');
+    } else if(obj.tipo === 'auxiliar'){
+      addRow('EFICIÊNCIA', obj.EFICIENCIA || '—');
+      addRow('VREP', obj.VREP || '—');
+      addRow('% ABS', obj.PercentualABS || '—');
+      addRow('Nível', obj.Nivel || '—');
     }
+    function addRow(k,v){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<th>${escapeHtml(k)}</th><td>${escapeHtml(v)}</td>`;
+      tbody.appendChild(tr);
+    }
+  }
 
-    async function entrar() {
-      const u = document.getElementById('usuario').value;
-      const s = document.getElementById('senha').value;
-      document.getElementById('erro').innerText = '';
+  async function entrar(){
+    const u = document.getElementById('usuario').value.trim();
+    const s = document.getElementById('senha').value.trim();
+    const err = document.getElementById('erro');
+    err.innerText = '';
+    if(!u || !s){ err.innerText = 'Preencha usuário e senha'; return; }
 
-      try {
-        const params = new URLSearchParams({ usuario: u, senha: s });
-        const res = await fetch('/api/login?' + params.toString());
-        const data = await res.json();
+    try{
+      const params = new URLSearchParams({ usuario:u, senha:s });
+      const res = await fetch('/api/login?' + params.toString());
+      const data = await res.json();
 
-        if (data.erro) {
-          document.getElementById('erro').innerText = data.erro;
-          return;
-        }
-
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('dash').style.display = 'block';
-
-        document.getElementById('nome').innerText = data.nome || '';
-        document.getElementById('cargo').innerText = (data.tipo || '').toUpperCase();
-
-        const tipo = (data.tipo || "").toLowerCase();
-
-
-        /* --------------------------
-           ANALISTA E AUXILIAR
-        -------------------------- */
-        if (tipo === 'analista' || tipo === 'auxiliar') {
-          let html = "<table><tbody>";
-
-          for (let key in data) {
-            if (['tipo', 'nome'].includes(key)) continue;
-
-            // Se for a célula STATUS → aplicar cor
-            if (key.toLowerCase() === "status") {
-              html += `<tr><th>${key}</th><td>${aplicarCorStatus(data[key])}</td></tr>`;
-            } else {
-              html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
-            }
-          }
-
-          html += "</tbody></table>";
-          document.getElementById('dados').innerHTML = html;
-
-          document.getElementById('metaImg').style.display =
-            tipo === 'auxiliar' ? 'block' : 'none';
-
-          return;
-        }
-
-
-        /* --------------------------
-           SUPERVISÃO / COORDENAÇÃO
-        -------------------------- */
-        if (Array.isArray(data.subordinados)) {
-
-          document.getElementById('metaImg').style.display = 'none';
-
-          let html = `
-            <h3>Equipe</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Cargo</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-          `;
-
-          for (let pessoa of data.subordinados) {
-            html += `
-              <tr>
-                <td>${pessoa.nome}</td>
-                <td>${pessoa.cargo}</td>
-                <td>${aplicarCorStatus(pessoa.status)}</td>
-              </tr>
-            `;
-          }
-
-          html += "</tbody></table>";
-          document.getElementById('dados').innerHTML = html;
-        }
-
-      } catch (e) {
-        document.getElementById('erro').innerText = 'Erro: ' + e.message;
+      if(data.erro){
+        err.innerText = data.erro;
+        return;
       }
-    }
 
-    function sair() {
-      document.getElementById('dash').style.display = 'none';
-      document.getElementById('login').style.display = 'block';
-      document.getElementById('usuario').value = '';
-      document.getElementById('senha').value = '';
-      document.getElementById('dados').innerHTML = '';
-    }
-  </script>
+      // Esconder login, mostrar painel
+      document.getElementById('dashboardArea').style.display = 'grid';
+      document.querySelector('.wrap .card.login-card').style.display = 'none';
 
+      const tipo = (data.tipo || '').toLowerCase();
+      document.getElementById('userRole').innerText = tipo === 'analista' ? 'ANALISTA COP' : tipo === 'auxiliar' ? 'AUXILIAR COP' : 'USUÁRIO';
+      document.getElementById('userName').innerText = data.nome || '';
+
+      // mostra imagem só para auxiliares (se quiser)
+      document.getElementById('metaImg').style.display = tipo === 'auxiliar' ? 'block' : 'none';
+
+      // Montar indicadores de referência
+      if(tipo === 'analista'){
+        montarIndicadoresAnalista();
+      } else if(tipo === 'auxiliar'){
+        montarIndicadoresAuxiliar();
+      } else {
+        // gestor / outros -> mostrar ambos como referência
+        montarIndicadoresAnalista();
+        montarIndicadoresAuxiliar();
+      }
+
+      // Montar cartão com métricas pessoais
+      const personal = document.getElementById('personalMetrics');
+      let html = '<h3 style="margin:0 0 8px 0">Seus Indicadores</h3>';
+      html += '<table style="width:100%;border-collapse:collapse">';
+      if(tipo === 'analista'){
+        html += `<tr><th style="text-align:left;padding:6px">TMA</th><td style="padding:6px">${escapeHtml(data.TMA||'—')}</td></tr>`;
+        html += `<tr><th style="text-align:left;padding:6px">TME</th><td style="padding:6px">${escapeHtml(data.TME||'—')}</td></tr>`;
+        html += `<tr><th style="text-align:left;padding:6px">Tempo Prod</th><td style="padding:6px">${escapeHtml(data.TempoProdutivo||'—')}</td></tr>`;
+        html += `<tr><th style="text-align:left;padding:6px">% ABS</th><td style="padding:6px">${escapeHtml(data.PercentualABS||'—')}</td></tr>`;
+      } else if(tipo === 'auxiliar'){
+        html += `<tr><th style="text-align:left;padding:6px">EFICIÊNCIA</th><td style="padding:6px">${escapeHtml(data.EFICIENCIA||'—')}</td></tr>`;
+        html += `<tr><th style="text-align:left;padding:6px">VREP</th><td style="padding:6px">${escapeHtml(data.VREP||'—')}</td></tr>`;
+        html += `<tr><th style="text-align:left;padding:6px">% ABS</th><td style="padding:6px">${escapeHtml(data.PercentualABS||'—')}</td></tr>`;
+      } else {
+        html += `<tr><td colspan="2">Visualização de gestor — use a aba "Equipe" para detalhes</td></tr>`;
+      }
+      html += '</table>';
+      personal.innerHTML = html;
+
+      // resumo lateral
+      mostrarResumo(data);
+
+    }catch(err){
+      document.getElementById('erro').innerText = 'Erro: ' + (err.message || err);
+    }
+  }
+
+  function sair(){
+    document.getElementById('dashboardArea').style.display = 'none';
+    document.querySelector('.wrap .card.login-card').style.display = 'flex';
+    document.getElementById('usuario').value = '';
+    document.getElementById('senha').value = '';
+    document.getElementById('erro').innerText = '';
+    document.getElementById('indicatorsContainer').innerHTML = '';
+    document.getElementById('personalMetrics').innerHTML = '';
+    document.getElementById('summaryTable').innerHTML = '';
+    document.getElementById('userName').innerText = '';
+    document.getElementById('userRole').innerText = '';
+  }
+</script>
 </body>
 </html>
