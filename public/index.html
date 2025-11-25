@@ -67,6 +67,15 @@
       background: #f2f2f2;
       font-weight: bold;
     }
+
+    /* Estilo dos status */
+    .status-box {
+      font-weight: bold;
+      padding: 6px 10px;
+      border-radius: 6px;
+      text-align: center;
+      text-transform: uppercase;
+    }
   </style>
 </head>
 
@@ -87,13 +96,26 @@
     <h2 id="nome"></h2>
     <h3 id="cargo"></h3>
     
-    <!-- Onde entram os dados -->
     <div id="dados"></div>
 
     <button onclick="sair()">Sair</button>
   </div>
 
   <script>
+
+    /* MAPA DE CORES DOS STATUS */
+    const statusColors = {
+      "Superação": "background:#16a34a; color:white;",   // verde
+      "Definida": "background:#2563eb; color:white;",    // azul
+      "Tolerável": "background:#facc15; color:black;",   // amarelo
+      "Não atingiu": "background:#dc2626; color:white;", // vermelho
+    };
+
+    function aplicarCorStatus(status) {
+      const estilo = statusColors[status] || "background:#999; color:white;";
+      return `<div class="status-box" style="${estilo}">${status}</div>`;
+    }
+
     async function entrar() {
       const u = document.getElementById('usuario').value;
       const s = document.getElementById('senha').value;
@@ -109,7 +131,6 @@
           return;
         }
 
-        // Exibir tela principal
         document.getElementById('login').style.display = 'none';
         document.getElementById('dash').style.display = 'block';
 
@@ -118,33 +139,39 @@
 
         const tipo = (data.tipo || "").toLowerCase();
 
-        // --------------------------
-        //  ANALISTA E AUXILIAR
-        // --------------------------
+
+        /* --------------------------
+           ANALISTA E AUXILIAR
+        -------------------------- */
         if (tipo === 'analista' || tipo === 'auxiliar') {
           let html = "<table><tbody>";
 
           for (let key in data) {
             if (['tipo', 'nome'].includes(key)) continue;
-            html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
+
+            // Se for a célula STATUS → aplicar cor
+            if (key.toLowerCase() === "status") {
+              html += `<tr><th>${key}</th><td>${aplicarCorStatus(data[key])}</td></tr>`;
+            } else {
+              html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
+            }
           }
 
           html += "</tbody></table>";
           document.getElementById('dados').innerHTML = html;
 
-          if (tipo === 'auxiliar') 
-            document.getElementById('metaImg').style.display = 'block';
-          else 
-            document.getElementById('metaImg').style.display = 'none';
+          document.getElementById('metaImg').style.display =
+            tipo === 'auxiliar' ? 'block' : 'none';
 
           return;
         }
 
 
-        // ----------------------------------------
-        // SUPERVISÃO / COORDENAÇÃO → LISTA GERAL
-        // ----------------------------------------
+        /* --------------------------
+           SUPERVISÃO / COORDENAÇÃO
+        -------------------------- */
         if (Array.isArray(data.subordinados)) {
+
           document.getElementById('metaImg').style.display = 'none';
 
           let html = `
@@ -165,7 +192,7 @@
               <tr>
                 <td>${pessoa.nome}</td>
                 <td>${pessoa.cargo}</td>
-                <td>${pessoa.status}</td>
+                <td>${aplicarCorStatus(pessoa.status)}</td>
               </tr>
             `;
           }
