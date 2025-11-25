@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Painel de Metas — Dashboard</title>
 
 <style>
@@ -148,8 +148,8 @@
       <p class="subtitle">Acesse seus indicadores</p>
     </div>
     <div class="login-box">
-      <input id="usuario" placeholder="Usuário" />
-      <input id="senha" type="password" placeholder="Senha" />
+      <input id="usuario" placeholder="Usuário">
+      <input id="senha" type="password" placeholder="Senha">
       <div class="login-actions">
         <div class="error" id="erro"></div>
         <button class="btn" onclick="entrar()">Entrar</button>
@@ -174,7 +174,63 @@
 </div>
 
 <script>
-// JS será atualizado depois da sua confirmação
+// Implementação básica das funções JavaScript
+function entrar() {
+  const usuario = document.getElementById('usuario').value;
+  const senha = document.getElementById('senha').value;
+  const erro = document.getElementById('erro');
+  
+  // Validação básica
+  if (!usuario || !senha) {
+    erro.textContent = 'Por favor, preencha todos os campos.';
+    return;
+  }
+  
+  // Simulação de login bem-sucedido
+  document.querySelector('.wrap').style.display = 'none';
+  document.getElementById('dashboardArea').style.display = 'block';
+  
+  // Preencher dados do usuário
+  document.getElementById('userRole').textContent = 'Gerente';
+  document.getElementById('userName').textContent = usuario;
+  
+  // Simular dados de indicadores
+  const indicatorsContainer = document.getElementById('indicatorsContainer');
+  indicatorsContainer.innerHTML = `
+    <div class="indicator-card">
+      <h4>Vendas</h4>
+      <table class="indicator-grid">
+        <thead>
+          <tr><th>Mês</th><th>Valor</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Jan</td><td>R$ 120.000</td><td class="status-super">Super</td></tr>
+          <tr><td>Fev</td><td>R$ 98.000</td><td class="status-def">Definido</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="indicator-card">
+      <h4>Produtividade</h4>
+      <table class="indicator-grid">
+        <thead>
+          <tr><th>Mês</th><th>Valor</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Jan</td><td>92%</td><td class="status-super">Super</td></tr>
+          <tr><td>Fev</td><td>85%</td><td class="status-tol">Tolerância</td></tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function sair() {
+  document.getElementById('dashboardArea').style.display = 'none';
+  document.querySelector('.wrap').style.display = 'flex';
+  document.getElementById('usuario').value = '';
+  document.getElementById('senha').value = '';
+  document.getElementById('erro').textContent = '';
+}
 </script>
 
 </body>
