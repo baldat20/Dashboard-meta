@@ -83,7 +83,7 @@ module.exports = async (req, res) => {
     /* -----------------------------------
        ANALISTA
     ----------------------------------- */
-    if (cargo === "ANALISTA DE COP") {
+    if (cargo === "ANALISTA COP") {
       const row = dadosAnalistas.find((r) => r[0] === nomeUsuario);
 
       if (!row)
@@ -105,7 +105,7 @@ module.exports = async (req, res) => {
     /* -----------------------------------
        AUXILIAR
     ----------------------------------- */
-    if (cargo === "AUXILIAR DE COP") {
+    if (cargo === "AUXILIAR COP") {
       const row = dadosAux.find((r) => r[0] === nomeUsuario);
 
       if (!row)
@@ -143,7 +143,7 @@ module.exports = async (req, res) => {
       if (responsaveis[nomeColab] === nomeUsuario) {
         subordinados.push({
           nome: nomeColab,
-          cargo: "Analista de COP",
+          cargo: "Analista COP",
           status: row[14] || "—",
         });
       }
@@ -155,7 +155,7 @@ module.exports = async (req, res) => {
       if (responsaveis[nomeColab] === nomeUsuario) {
         subordinados.push({
           nome: nomeColab,
-          cargo: "Auxiliar de COP",
+          cargo: "Auxiliar COP",
           status: row[10] || "—",
         });
       }
