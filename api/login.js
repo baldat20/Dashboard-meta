@@ -1,8 +1,6 @@
+// /api/login.js
 const { google } = require("googleapis");
 
-// ------------------------------------------------------------
-// FUNÇÃO PARA ACESSAR A PLANILHA
-// ------------------------------------------------------------
 async function acessarPlanilha() {
   const auth = new google.auth.GoogleAuth({
     credentials: {
@@ -17,9 +15,6 @@ async function acessarPlanilha() {
   return google.sheets({ version: "v4", auth });
 }
 
-// ------------------------------------------------------------
-// HANDLER PRINCIPAL
-// ------------------------------------------------------------
 module.exports = async (req, res) => {
   try {
     const query = req.method === "GET" ? req.query : req.body;
@@ -31,100 +26,34 @@ module.exports = async (req, res) => {
     }
 
     const sheets = await acessarPlanilha();
+    const sheetId = process.env.SHEET_ID;
 
-    // ----------------------------------------------------------
-    // 0) PRIMEIRO: VALIDAR SE É GESTÃO (ABA 'usuarios')
-    // ----------------------------------------------------------
+    // 1) verificar aba usuarios primeiro (A: Usuario | B: Senha | C: Cargo/Nome da pessoa)
     const usuariosResp = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.SHEET_ID,
-      range: "usuarios!A:C", // A = usuário | B = senha | C = cargo
+      spreadsheetId: sheetId,
+      range: "usuarios!A:C"
     });
-
-    const usuarios = usuariosResp.data.values || [];
-
-    const matchGestao = usuarios.find(
-      (row) => row[0] === usuario && row[1] === senha
-    );
+    const usuariosRows = usuariosResp.data.values || [];
+    const matchGestao = usuariosRows.find(row => (row[0] === usuario && row[1] === senha));
 
     if (matchGestao) {
-      return res.status(200).json({
+      // matchGestao[0] = Usuario (nome de login), matchGestao[1] = senha, matchGestao[2] = Cargo (p.ex. "Supervisor" ou "Leticia ..."?)
+      // Como definimos antes, vamos retornar nome = matchGestao[0] (nome da pessoa) e cargo = matchGestao[2] (cargo texto)
+      return res.json({
         success: true,
         perfil: "gestao",
         nome: matchGestao[0],
-        cargo: matchGestao[2] || "Gestão",
+        cargo: matchGestao[2] || "Gestão"
       });
     }
 
-    // ----------------------------------------------------------
-    // INDICADORES PADRÃO — Analistas
-    // ----------------------------------------------------------
-    const indicadoresAnalistas = [
-      {
-        indicador: "SUPERAÇÃO",
-        percentual: "110%",
-        TMA: "00:08:00",
-        TME: "00:00:35",
-        tempoProd: "06:20:00",
-        abs: "10%",
-      },
-      {
-        indicador: "DEFINIDA",
-        percentual: "100%",
-        TMA: "00:08:40",
-        TME: "00:00:45",
-        tempoProd: "06:20:00",
-        abs: "10%",
-      },
-      {
-        indicador: "TOLERÁVEL",
-        percentual: "50%",
-        TMA: "00:09:30",
-        TME: "00:01:00",
-        tempoProd: "06:20:00",
-        abs: "10%",
-      },
-    ];
-
-    // ----------------------------------------------------------
-    // INDICADORES PADRÃO — Auxiliares
-    // ----------------------------------------------------------
-    const indicadoresAuxiliares = [
-      {
-        indicador: "SUPERAÇÃO",
-        percentual: "110%",
-        eficiencia: "86.9%",
-        reparo24: "90%",
-        abs: "10%",
-        faixa: "60%",
-      },
-      {
-        indicador: "DEFINIDA",
-        percentual: "100%",
-        eficiencia: "81.9%",
-        reparo24: "85%",
-        abs: "10%",
-        faixa: "40%",
-      },
-      {
-        indicador: "TOLERÁVEL",
-        percentual: "50%",
-        eficiencia: "76.9%",
-        reparo24: "80%",
-        abs: "10%",
-        faixa: "20%",
-      },
-    ];
-
-    // ----------------------------------------------------------
-    // 1) LOGIN ANALISTA
-    // ----------------------------------------------------------
-    const analistas = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.SHEET_ID,
-      range: "Relatorio Analistas!A2:O",
+    // 2) Analistas
+    const analResp = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: "Relatorio Analistas!A2:O"
     });
-
-    for (let row of analistas.data.values || []) {
-      if (row[0] === usuario && row[1] === senha) {
+    for (let row of (analResp.data.values || [])) {
+      if (row[0] === usuario && row[2] === senha) { // lembre: senha dos analistas está na coluna C
         return res.json({
           tipo: "analista",
           nome: row[0],
@@ -134,21 +63,18 @@ module.exports = async (req, res) => {
           PercentualABS: row[7],
           PercentualSalario: row[13],
           Nivel: row[14],
-          indicadores: indicadoresAnalistas,
+          indicadores: [] // ou preencha se quiser
         });
       }
     }
 
-    // ----------------------------------------------------------
-    // 2) LOGIN AUXILIAR
-    // ----------------------------------------------------------
-    const auxiliares = await sheets.spreadsheets.values.get({
-      spreadsheetId: process.env.SHEET_ID,
-      range: "Relatorio Auxiliares!A2:K",
+    // 3) Auxiliares
+    const auxResp = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: "Relatorio Auxiliares!A2:K"
     });
-
-    for (let row of auxiliares.data.values || []) {
-      if (row[0] === usuario && row[1] === senha) {
+    for (let row of (auxResp.data.values || [])) {
+      if (row[0] === usuario && row[1] === senha) { // senha auxiliares está na coluna B
         return res.json({
           tipo: "auxiliar",
           nome: row[0],
@@ -156,18 +82,15 @@ module.exports = async (req, res) => {
           VREP: row[3],
           PercentualABS: row[4],
           PercentualSalario: row[9],
-          Nivel: row[10],
-          indicadores: indicadoresAuxiliares,
+          Nivel: row[10]
         });
       }
     }
 
-    // ----------------------------------------------------------
-    // NÃO ENCONTROU LOGIN
-    // ----------------------------------------------------------
     return res.status(401).json({ erro: "Usuário ou senha incorretos." });
-  } catch (e) {
-    console.error("Erro API /api/login:", e);
-    return res.status(500).json({ erro: e.message });
+
+  } catch (err) {
+    console.error("Erro /api/login:", err);
+    return res.status(500).json({ erro: err.message });
   }
 };
