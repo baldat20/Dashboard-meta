@@ -41,14 +41,12 @@ function isCoord() {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("supNome").innerText = nome;
 
-  // abas
   document.getElementById("tabAnal").onclick = () => selecionarAba("analistas");
   document.getElementById("tabAux").onclick = () => selecionarAba("auxiliares");
-
   document.getElementById("btnVoltarSup").onclick = voltarParaSupervisoras;
 
   if (isCoord()) {
-    montarMenuSupervisoras();
+    carregarResumoSupervisoras();
   } else {
     supervisaoSelecionada = nome;
     document.getElementById("tabsRow").style.display = "flex";
@@ -57,18 +55,50 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =============================
+// Buscar supervisoras + quantidade via API
+// =============================
+async function carregarResumoSupervisoras() {
+  const url = `/api/gestao?cargo=${encodeURIComponent(cargo)}`;
+
+  try {
+    const resp = await fetch(url);
+    const dados = await resp.json();
+
+    montarMenuSupervisoras(dados.supervisores || {});
+  } catch (e) {
+    console.error("Erro ao carregar resumo:", e);
+  }
+}
+
+// =============================
 // Coordenação — Lista supervisoras
 // =============================
-function montarMenuSupervisoras() {
+function montarMenuSupervisoras(supervisoresAPI) {
   const div = document.getElementById("menuCoord");
   div.style.display = "flex";
-  div.innerHTML = "";
+  div.innerHTML = `
+    <h2 style="color:white; font-weight:800; margin-bottom:10px;">
+      Supervisores sob sua gestão
+    </h2>
+  `;
 
-  SUPERVISORES.forEach(s => {
+  SUPERVISORES.forEach((sup, index) => {
+    const info = supervisoresAPI[sup] || {};
+    const analistasQtd = (info.analistas || []).length;
+    const auxiliaresQtd = (info.auxiliares || []).length;
+
     const btn = document.createElement("button");
     btn.className = "sup-btn";
-    btn.innerText = s;
-    btn.onclick = () => selecionarSupervisora(s);
+
+    btn.innerHTML = `
+      <div>
+        <strong>${index + 1}. ${sup}</strong><br>
+        <span class="sup-count">${analistasQtd} analistas • ${auxiliaresQtd} auxiliares</span>
+      </div>
+      <span class="sup-arrow">→</span>
+    `;
+
+    btn.onclick = () => selecionarSupervisora(sup);
     div.appendChild(btn);
   });
 }
