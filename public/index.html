@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Painel de Metas </title>
+  <title>Painel de Metas</title>
   <style>
     body { 
       font-family: Arial, sans-serif;
@@ -45,7 +45,6 @@
     }
   </style>
 </head>
-
 <body>
 
   <div id="login">
@@ -75,18 +74,19 @@
         const res = await fetch('/api/login?' + params.toString());
         const data = await res.json();
 
-        if (data.erro) {
-          document.getElementById('erro').innerText = data.erro;
+        if (data.erro || data.success === false) {
+          document.getElementById('erro').innerText = data.erro || data.message || 'Login inválido';
           return;
         }
 
-        // 🔹 Redirecionamento para gestão
+        // Se for gestão, redireciona para gestao.html
         if (data.perfil === "gestao") {
-          window.location.href = `gestao.html?nome=${encodeURIComponent(data.nome)}&cargo=${encodeURIComponent(data.cargo)}`;
+          // IMPORTANT: enviamos cargo = DATA.NOME para que a API /api/gestao reconheça a supervisora
+          window.location.href = `gestao.html?nome=${encodeURIComponent(data.nome)}&cargo=${encodeURIComponent(data.nome)}`;
           return;
         }
 
-        // 🔹 Fluxo normal
+        // Demais perfis -> mantém painel atual (analista/auxiliar)
         document.getElementById('login').style.display = 'none';
         document.getElementById('dash').style.display = 'block';
 
