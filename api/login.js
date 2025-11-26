@@ -1,5 +1,48 @@
 const { google } = require("googleapis");
 
+export default async function handler(req, res) {
+  const usuario = req.query.usuario;
+  const senha = req.query.senha;
+
+  if (!usuario || !senha) {
+    return res.status(400).json({ success: false, message: "Parâmetros inválidos" });
+  }
+
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+    });
+
+    const sheets = google.sheets({ version: "v4", auth });
+
+    
+
+    const usuariosResp = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.SHEET_ID,
+      range: "usuarios!A:C", // usuario | senha | cargo
+    });
+
+    const usuarios = usuariosResp.data.values || [];
+
+    const matchGestao = usuarios.find(row =>
+      row[0] === usuario && row[1] === senha
+    );
+
+    if (matchGestao) {
+      return res.status(200).json({
+        success: true,
+        perfil: "gestao",
+        cargo: matchGestao[2] || "Gestão"
+      });
+    }
+
+
+const { google } = require("googleapis");
+
 async function acessarPlanilha() {
   const auth = new google.auth.GoogleAuth({
     credentials: {
@@ -59,7 +102,6 @@ module.exports = async (req, res) => {
           PercentualABS: row[7],
           PercentualSalario: row[13],
           Nivel: row[14],
-          Status: row[14] ?? "",
 
           indicadores: indicadoresAnalistas
         });
@@ -84,7 +126,6 @@ module.exports = async (req, res) => {
           PercentualABS: row[4],
           PercentualSalario: row[9],
           Nivel: row[10],
-          Status: row[10] ?? "",
 
           indicadores: indicadoresAuxiliares
         });
