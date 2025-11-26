@@ -1,9 +1,14 @@
-// public/gestao.js (frontend)
-// Lê query string (nome/cargo) e monta a interface que consome /api/gestao
+// public/gestao.js (frontend) - versão com o visual solicitado
 
 const urlParams = new URLSearchParams(window.location.search);
-const nome = urlParams.get('nome') || '';   // nome do usuário logado (ex: "Erika ...")
-const cargo = urlParams.get('cargo') || ''; // aqui estamos passando cargo = nome do usuário (por redirect)
+
+// Proteção: se aberto direto sem nome/cargo -> volta para index
+if (!urlParams.get("nome") || !urlParams.get("cargo")) {
+  window.location.href = "index.html";
+}
+
+const nome = urlParams.get('nome') || '';
+const cargo = urlParams.get('cargo') || '';
 
 // supervisoras fixas (ordem)
 const SUPERVISORES = [
@@ -16,168 +21,169 @@ const SUPERVISORES = [
 
 // cores por nível (conforme solicitado)
 const CORES_NIVEL = {
-  "SUPERAÇÃO": "#a129d9",
-  "DEFINIDA": "#42f554",
-  "TOLERÁVEL": "#dbd951",
-  "NÃO ATINGIU": "#db4c42"
+  "SUPERAÇÃO": { cls: "nivel-super", hex: "#a129d9" },
+  "DEFINIDA":  { cls: "nivel-defin",  hex: "#42f554" },
+  "TOLERÁVEL": { cls: "nivel-toler",  hex: "#dbd951" },
+  "NÃO ATINGIU":{ cls: "nivel-nao",   hex: "#db4c42" }
 };
 
 let supervisaoSelecionada = null;
-let tipoAtual = null;
+let tipoAtual = 'analistas';
 
 function isCoord() {
   return (cargo === "Leticia Caroline Da Silva");
 }
 
-function logDebug(...args) {
-  // comente a linha abaixo se quiser silêncio em produção
-  console.log("[gestao.js]", ...args);
+function showCard() {
+  document.getElementById('cardArea').style.display = 'block';
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // valida elementos mínimos
-  if (!document.getElementById("tituloPainel")) {
-    console.error("gestao.js: elemento #tituloPainel não encontrado");
-    return;
-  }
-  document.getElementById("tituloPainel").innerText = `Painel de Gestão - ${nome || ''}`;
+  // preencher titulo com nome da supervisora
+  document.getElementById('supNome').innerText = nome;
 
+  // botões
+  const btnAnal = document.getElementById("tabAnal");
+  const btnAux = document.getElementById("tabAux");
+  const btnSair = document.getElementById("btnSair");
+
+  btnAnal.addEventListener("click", () => {
+    tipoAtual = 'analistas';
+    btnAnal.classList.add('active');
+    btnAux.classList.remove('active');
+    if (supervisaoSelecionada) carregarRelatorio(tipoAtual);
+  });
+  btnAux.addEventListener("click", () => {
+    tipoAtual = 'auxiliares';
+    btnAux.classList.add('active');
+    btnAnal.classList.remove('active');
+    if (supervisaoSelecionada) carregarRelatorio(tipoAtual);
+  });
+
+  btnSair.addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
+
+  // se for coordenação, mostrar menu de supervisoras (usaremos prompt simples)
   if (isCoord()) {
-    gerarMenuSupervisoes();
+    // gerar select simples: vamos usar prompt pra não mexer em DOM extra
+    const sel = prompt("Digite a supervisora desejada ou deixe em branco para ver todas:\n(Ex: Erika Silvestre Nunes)");
+    if (sel && sel.trim().length>0) {
+      supervisaoSelecionada = sel.trim();
+      carregarRelatorio(tipoAtual);
+    } else {
+      // se quiser ver resumo por supervisora podemos chamar API com cargo=Leticia...
+      carregarResumoCoordenacao();
+    }
   } else {
+    // supervisor logado vê sua própria equipe
     supervisaoSelecionada = nome;
-    document.getElementById("menuTipoRelatorio").style.display = "flex";
+    // marca Analistas ativo por padrão
+    document.getElementById("tabAnal").classList.add('active');
+    carregarRelatorio('analistas');
   }
-
-  const btnAnal = document.getElementById("btnAnalistas");
-  const btnAux = document.getElementById("btnAuxiliares");
-  if (btnAnal) btnAnal.onclick = () => { tipoAtual = 'analistas'; carregarRelatorio('analistas'); };
-  if (btnAux) btnAux.onclick = () => { tipoAtual = 'auxiliares'; carregarRelatorio('auxiliares'); };
-
-  logDebug("iniciado", { nome, cargo, isCoord: isCoord() });
 });
 
-function gerarMenuSupervisoes() {
-  const menu = document.getElementById("menuSupervisoes");
-  if (!menu) { console.error("menuSupervisoes não encontrado"); return; }
-  menu.innerHTML = "";
-  SUPERVISORES.forEach(sup => {
-    const btn = document.createElement("button");
-    btn.innerText = sup;
-    btn.onclick = () => {
-      supervisaoSelecionada = sup;
-      document.getElementById("menuTipoRelatorio").style.display = "flex";
-      document.getElementById("areaTabela").innerHTML = "<em>Selecione Analistas ou Auxiliares...</em>";
-    };
-    menu.appendChild(btn);
-  });
-}
-
+// chama a API /api/gestao para trazer dados
 async function carregarRelatorio(tipo) {
   if (!supervisaoSelecionada) {
-    document.getElementById("areaTabela").innerHTML = "<em>Selecione uma supervisão primeiro.</em>";
+    document.getElementById("tabelaBody").innerHTML = `<tr><td colspan="6" style="padding:18px">Selecione uma supervisão.</td></tr>`;
     return;
   }
 
-  document.getElementById("areaTabela").innerHTML = "<em>Carregando...</em>";
+  document.getElementById("tabelaBody").innerHTML = `<tr><td colspan="6" style="padding:18px">Carregando...</td></tr>`;
+  showCard();
 
-  // envia cargo = nome (usuário logado) para que a API reconheça coordenação / supervisora
   const url = `/api/gestao?tipo=${encodeURIComponent(tipo)}&supervisao=${encodeURIComponent(supervisaoSelecionada)}&cargo=${encodeURIComponent(nome)}`;
 
-  logDebug("fetch", url);
   try {
     const resp = await fetch(url);
     if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      document.getElementById("areaTabela").innerHTML = `<em>Erro: ${err.erro || resp.statusText}</em>`;
+      const err = await resp.json().catch(()=>({erro:resp.statusText}));
+      document.getElementById("tabelaBody").innerHTML = `<tr><td colspan="6" style="padding:18px">Erro: ${err.erro || resp.statusText}</td></tr>`;
       return;
     }
 
     const dados = await resp.json();
 
-    if (dados.supervisores) {
-      montarResumoCoordenacao(dados.supervisores);
-      return;
-    }
+    const lista = (tipo === 'analistas') ? (dados.analistas || []) : (dados.auxiliares || []);
 
-    if (tipo === 'analistas') {
-      const lista = dados.analistas || dados;
-      montarTabelaAnalistas(lista);
-    } else if (tipo === 'auxiliares') {
-      const lista = dados.auxiliares || dados;
-      montarTabelaAuxiliares(lista);
-    } else {
-      if (dados.analistas) montarTabelaAnalistas(dados.analistas || []);
-      if (dados.auxiliares) montarTabelaAuxiliares(dados.auxiliares || []);
-    }
+    montarTabela(lista, tipo);
   } catch (e) {
-    document.getElementById("areaTabela").innerHTML = `<em>Erro: ${e.message}</em>`;
+    document.getElementById("tabelaBody").innerHTML = `<tr><td colspan="6" style="padding:18px">Erro: ${e.message}</td></tr>`;
     console.error("Erro fetch /api/gestao:", e);
   }
 }
 
-function montarResumoCoordenacao(objSupervisores) {
-  let html = `<div>`;
-  for (const supName of Object.keys(objSupervisores)) {
-    const sup = objSupervisores[supName];
-    html += `<div style="margin-bottom:18px; padding:12px; border-radius:8px; background:#fff; box-shadow:0 1px 6px rgba(0,0,0,0.06);">
-      <h3 style="margin:0 0 8px 0; background:#42a7f5; color:#fff; display:inline-block; padding:6px 10px; border-radius:6px;">${supName}</h3>
-      <div style="margin-top:8px;"><strong>Analistas:</strong> ${ (sup.analistas||[]).length } — <strong>Auxiliares:</strong> ${ (sup.auxiliares||[]).length }</div>
-      <div style="margin-top:10px;">
-        <button onclick="filtrarEVer('${encodeURIComponent(supName)}','analistas')">Ver Analistas</button>
-        <button onclick="filtrarEVer('${encodeURIComponent(supName)}','auxiliares')">Ver Auxiliares</button>
-      </div>
-    </div>`;
+async function carregarResumoCoordenacao() {
+  // chama API para coletar todas as supervisoras
+  const url = `/api/gestao?cargo=${encodeURIComponent(cargo)}`; // cargo = Leticia...
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    document.getElementById("tabelaBody").innerHTML = `<tr><td colspan="6" style="padding:18px">Erro ao carregar resumo.</td></tr>`;
+    return;
   }
-  html += `</div>`;
-  document.getElementById("areaTabela").innerHTML = html;
-}
-
-function filtrarEVer(supEncoded, tipo) {
-  supervisaoSelecionada = decodeURIComponent(supEncoded);
-  tipoAtual = tipo;
-  carregarRelatorio(tipo);
-}
-
-function montarTabelaAnalistas(lista) {
-  if (!lista || lista.length === 0) {
-    document.getElementById("areaTabela").innerHTML = "<em>Nenhum analista encontrado.</em>";
+  const dados = await resp.json();
+  // montar um menu simples com botões por supervisora no topo (se preferir, podemos renderizar aqui)
+  const supNames = Object.keys(dados.supervisores || {});
+  if (supNames.length === 0) {
+    document.getElementById("tabelaBody").innerHTML = `<tr><td colspan="6" style="padding:18px">Nenhuma supervisora encontrada.</td></tr>`;
     return;
   }
 
-  let html = `<table><thead><tr><th>Nome</th><th>TMA</th><th>TME</th><th>Tempo Prod</th><th>% ABS</th><th>Nível</th></tr></thead><tbody>`;
-  lista.forEach(row => {
-    const cor = CORES_NIVEL[(row.nivel||"").toUpperCase()] || '#ccc';
-    html += `<tr>
-      <td>${row.nome}</td>
-      <td>${row.tma}</td>
-      <td>${row.tme}</td>
-      <td>${row.tempoProd}</td>
-      <td>${row.abs}</td>
-      <td><span class="tagNivel" style="background:${cor}">${row.nivel}</span></td>
-    </tr>`;
+  // montar HTML simples com botões para cada supervisora
+  let html = `<tr><td colspan="6" style="padding:12px">`;
+  html += `<div style="display:flex;flex-wrap:wrap;gap:10px">`;
+  supNames.forEach(sup => {
+    html += `<button style="padding:8px 12px;border-radius:8px;border:1px solid #dbeffd;background:#fff;cursor:pointer" onclick="selecionarSupervisora('${encodeURIComponent(sup)}')">${sup} (${(dados.supervisores[sup].analistas||[]).length} / ${(dados.supervisores[sup].auxiliares||[]).length})</button>`;
   });
-  html += `</tbody></table>`;
-  document.getElementById("areaTabela").innerHTML = html;
+  html += `</div></td></tr>`;
+  document.getElementById("tabelaBody").innerHTML = html;
+  showCard();
 }
 
-function montarTabelaAuxiliares(lista) {
+function selecionarSupervisora(supEnc) {
+  supervisaoSelecionada = decodeURIComponent(supEnc);
+  document.getElementById("tabAnal").classList.add('active');
+  document.getElementById("tabAux").classList.remove('active');
+  carregarRelatorio('analistas');
+}
+
+function montarTabela(lista, tipo) {
   if (!lista || lista.length === 0) {
-    document.getElementById("areaTabela").innerHTML = "<em>Nenhum auxiliar encontrado.</em>";
+    document.getElementById("tabelaBody").innerHTML = `<tr><td colspan="6" style="padding:18px">Nenhum registro encontrado.</td></tr>`;
     return;
   }
 
-  let html = `<table><thead><tr><th>Nome</th><th>Eficiência</th><th>VREP</th><th>% ABS</th><th>Nível</th></tr></thead><tbody>`;
-  lista.forEach(row => {
-    const cor = CORES_NIVEL[(row.nivel||"").toUpperCase()] || '#ccc';
+  // construir linhas
+  let html = '';
+  for (const row of lista) {
+    // adaptar campos para analistas / auxiliares
+    const nomeVal = row.nome || '';
+    const tma = row.tma || (row.EFICIENCIA || '');
+    const tme = row.tme || (row.vrep || '');
+    const tempo = row.tempoProd || '';
+    const abs = row.abs || '';
+    const nivel = (row.nivel || '').toUpperCase();
+
+    const nivelClass = (CORES_NIVEL[nivel] || {}).cls || '';
+    const levelText = nivel || '';
+
     html += `<tr>
-      <td>${row.nome}</td>
-      <td>${row.eficiencia}</td>
-      <td>${row.vrep}</td>
-      <td>${row.abs}</td>
-      <td><span class="tagNivel" style="background:${cor}">${row.nivel}</span></td>
+      <td class="col-name">${escapeHtml(nomeVal)}</td>
+      <td>${tma}</td>
+      <td>${tme}</td>
+      <td>${tempo}</td>
+      <td>${abs}</td>
+      <td style="text-align:center"><span class="badge ${nivelClass}">${levelText}</span></td>
     </tr>`;
-  });
-  html += `</tbody></table>`;
-  document.getElementById("areaTabela").innerHTML = html;
+  }
+
+  document.getElementById("tabelaBody").innerHTML = html;
+  showCard();
+}
+
+// small utility to avoid XSS in names
+function escapeHtml(str){
+  return String(str||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
