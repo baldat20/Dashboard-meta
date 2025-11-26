@@ -1,140 +1,187 @@
-// gestao.js - Geração dinâmica das visões de supervisão para coordenação
+// /api/gestao.js
+const { google } = require("googleapis");
 
-/**
- * FUNÇÃO PRINCIPAL
- * Carrega os dados após login da coordenação e monta as abas por supervisão
- */
-async function carregarGestao(dados, usuarioLogado) {
-  const secoes = document.getElementById("conteudoGestao");
-  secoes.innerHTML = "";
+// lista fixa das supervisoras permitidas (conforme combinado)
+const SUPERVISORES_LIST = [
+  "Erika Silvestre Nunes",
+  "Agata Angel Pereira Oliveira",
+  "Joyce Carla Santos Marques",
+  "Renata Ferreira de Oliveira",
+  "Layra da Silva Reginaldo",
+];
 
-  const supervisoras = [
-    "Erika Silvestre Nunes",
-    "Agata Angel Pereira Oliveira",
-    "Joyce Carla Santos Marques",
-    "Renata Ferreira de Oliveira",
-    "Layra da Silva Reginaldo"
-  ];
+// ordem de prioridade para ordenação por nível
+const NIVEL_ORDER = {
+  "SUPERAÇÃO": 1,
+  "DEFINIDA": 2,
+  "TOLERÁVEL": 3,
+  "NÃO ATINGIU": 4
+};
 
-  supervisoras.forEach(supervisora => {
-    const grupo = filtrarPorSupervisao(dados, supervisora);
-    secoes.appendChild(gerarAba(supervisora, grupo));
-  });
-}
-
-/** FILTRA OS REGISTROS DA SUPERVISÃO */
-function filtrarPorSupervisao(dados, supervisao) {
-  return dados.filter(linha => linha.supervisao === supervisao);
-}
-
-/** GERA UMA ABA COMPLETA (CARD + TABELA) */
-function gerarAba(nomeSupervisao, registros) {
-  const aba = document.createElement("div");
-  aba.className = "aba-supervisao";
-
-  const titulo = document.createElement("h2");
-  titulo.textContent = nomeSupervisao;
-  titulo.className = "tituloAba";
-
-  const tabela = gerarTabela(registros);
-
-  aba.appendChild(titulo);
-  aba.appendChild(tabela);
-  return aba;
-}
-
-/** GERA TABELA COM CORES AUTOMÁTICAS POR NÍVEL */
-function gerarTabela(registros) {
-  const tabela = document.createElement("table");
-  tabela.className = "tabelaGestao";
-
-  const head = document.createElement("thead");
-  head.innerHTML = `
-    <tr>
-      <th>Nome</th>
-      <th>TMA</th>
-      <th>TME</th>
-      <th>Tempo Prod</th>
-      <th>% ABS</th>
-      <th>Nível</th>
-    </tr>`;
-
-  const body = document.createElement("tbody");
-
-  registros.forEach(r => {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${r.nome}</td>
-      <td>${r.tma}</td>
-      <td>${r.tme}</td>
-      <td>${r.tempoProd}</td>
-      <td>${r.abs}</td>
-      <td><span class="tagNivel" style="background:${corNivel(r.nivel)};">${r.nivel}</span></td>
-    `;
-
-    body.appendChild(tr);
+async function acessarPlanilha() {
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      private_key:
+        process.env.GOOGLE_PRIVATE_KEY &&
+        process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    },
+    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
   });
 
-  tabela.appendChild(head);
-  tabela.appendChild(body);
-  return tabela;
+  return google.sheets({ version: "v4", auth });
 }
 
-/** RETORNA A COR DO NÍVEL */
-function corNivel(nivel) {
-  switch (nivel?.toUpperCase()) {
-    case "SUPERAÇÃO": return "#a129d9";
-    case "DEFINIDA": return "#42f554";
-    case "TOLERÁVEL": return "#dbd951";
-    case "NÃO ATINGIU": return "#db4c42";
-    default: return "#cccccc";
-  }
+function sortByNivel(a, b) {
+  const aRank = NIVEL_ORDER[(a.nivel || "").toUpperCase()] || 999;
+  const bRank = NIVEL_ORDER[(b.nivel || "").toUpperCase()] || 999;
+  if (aRank !== bRank) return aRank - bRank;
+  // fallback: ordenar alfabeticamente pelo nome
+  return (a.nome || "").localeCompare(b.nome || "");
 }
 
-/** ESTILOS DINÂMICOS */
-const estilo = document.createElement("style");
-estilo.innerHTML = `
-  .aba-supervisao {
-    background: #ffffff;
-    padding: 20px;
-    margin-top: 25px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  }
+module.exports = async (req, res) => {
+  try {
+    const query = req.method === "GET" ? req.query : req.body;
+    const tipo = (query.tipo || "").toLowerCase(); // 'analistas' | 'auxiliares' | ''
+    const supervisao = query.supervisao || ""; // nome da supervisora (opcional)
+    const cargo = (query.cargo || "").trim(); // nome do usuário logado, ex: 'Leticia Caroline Da Silva'
 
-  .tituloAba {
-    background: #42a7f5;
-    color: white;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 20px;
-    margin-bottom: 18px;
-  }
+    const sheets = await acessarPlanilha();
+    const sheetId = process.env.SHEET_ID;
+    if (!sheetId) {
+      return res.status(500).json({ erro: "SHEET_ID não configurado." });
+    }
 
-  .tabelaGestao {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
+    // --- Carrega Analistas (precisamos até a coluna P) ---
+    const analistasResp = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: "Relatorio Analistas!A2:P", // inclui até P (index 15)
+    });
+    const analistasRows = analistasResp.data.values || [];
 
-  .tabelaGestao th {
-    background: #42a7f5;
-    color: white;
-    padding: 10px;
-  }
+    // Mapeia analistas para objetos (sem senha)
+    const analistas = analistasRows.map(row => {
+      return {
+        usuario: row[0] || "",
+        // senha = row[2] (col C) existe mas NÃO vamos retornar
+        nome: row[0] || "",
+        tma: row[4] || "",
+        tme: row[5] || "",
+        tempoProd: row[6] || "",
+        abs: row[7] || "",
+        nivel: row[14] || "", // coluna O -> index 14
+        supervisao: row[15] || "" // coluna P -> index 15
+      };
+    });
 
-  .tabelaGestao td {
-    padding: 8px;
-    border-bottom: 1px solid #dddddd;
-  }
+    // --- Carrega Auxiliares (precisamos até a coluna L) ---
+    const auxiliaresResp = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: "Relatorio Auxiliares!A2:L", // inclui até L (index 11)
+    });
+    const auxiliaresRows = auxiliaresResp.data.values || [];
 
-  .tagNivel {
-    padding: 4px 10px;
-    color: #000;
-    border-radius: 6px;
-    font-weight: bold;
-  }
-`;
+    const auxiliares = auxiliaresRows.map(row => {
+      return {
+        usuario: row[0] || "",
+        // senha = row[1] (col B) existe mas NÃO vamos retornar
+        nome: row[0] || "",
+        eficiencia: row[2] || "",
+        vrep: row[3] || "",
+        abs: row[4] || "",
+        nivel: row[10] || "", // coluna K -> index 10
+        supervisao: row[11] || "" // coluna L -> index 11
+      };
+    });
 
-document.head.appendChild(estilo);
+    // Função utilitária de filtro por supervisão (exata)
+    function filtrarAnalistasPor(supervisorNome) {
+      return analistas
+        .filter(a => (a.supervisao || "").trim() === supervisorNome)
+        .map(a => ({
+          nome: a.nome,
+          tma: a.tma,
+          tme: a.tme,
+          tempoProd: a.tempoProd,
+          abs: a.abs,
+          nivel: a.nivel
+        }))
+        .sort(sortByNivel);
+    }
+
+    function filtrarAuxiliaresPor(supervisorNome) {
+      return auxiliares
+        .filter(a => (a.supervisao || "").trim() === supervisorNome)
+        .map(a => ({
+          nome: a.nome,
+          eficiencia: a.eficiencia,
+          vrep: a.vrep,
+          abs: a.abs,
+          nivel: a.nivel
+        }))
+        .sort(sortByNivel);
+    }
+
+    // Se cargo indica coordenação (Leticia) e não foi passada uma supervisao específica,
+    // devolvemos os dados agrupados por supervisora (excluindo "Outra Regional")
+    const isCoord = cargo === "Leticia Caroline Da Silva";
+
+    // Se coordenação sem supervisao e sem tipo => retorna grouped para todas as supervisoras
+    if (isCoord && !supervisao) {
+      const resultado = {};
+      for (const sup of SUPERVISORES_LIST) {
+        resultado[sup] = {
+          analistas: filtrarAnalistasPor(sup),
+          auxiliares: filtrarAuxiliaresPor(sup)
+        };
+      }
+      return res.json({ supervisores: resultado });
+    }
+
+    // Caso seja coordenação com supervisao explicita OU supervisor comum:
+    // Se supervisao está presente, usamos ela; senão usamos cargo (usuário logado é supervisor)
+    const targetSupervisao = supervisao || cargo;
+
+    // Se for coordenacao e o targetSupervisao for um dos supervisoras válidos:
+    if (isCoord && targetSupervisao && SUPERVISORES_LIST.includes(targetSupervisao)) {
+      // retorna somente a supervisao solicitada
+      const respObj = {
+        supervisao: targetSupervisao,
+        analistas: filtrarAnalistasPor(targetSupervisao),
+        auxiliares: filtrarAuxiliaresPor(targetSupervisao)
+      };
+
+      if (tipo === "analistas") return res.json({ analistas: respObj.analistas });
+      if (tipo === "auxiliares") return res.json({ auxiliares: respObj.auxiliares });
+      return res.json(respObj);
+    }
+
+    // Se não for coordenação, pode ser uma supervisora (cargo = nome da supervisora)
+    if (!isCoord && SUPERVISORES_LIST.includes(cargo)) {
+      const respObj = {
+        supervisao: cargo,
+        analistas: filtrarAnalistasPor(cargo),
+        auxiliares: filtrarAuxiliaresPor(cargo)
+      };
+
+      if (tipo === "analistas") return res.json({ analistas: respObj.analistas });
+      if (tipo === "auxiliares") return res.json({ auxiliares: respObj.auxiliares });
+      return res.json(respObj);
+    }
+
+    // Caso seja coordenação mas o targetSupervisao não seja da lista (ou um request específico por supervisao),
+    // respondemos com erro amigável.
+    // Também protegemos contra retorno de "Outra Regional".
+    if (isCoord && targetSupervisao && targetSupervisao === "Outra Regional") {
+      return res.status(400).json({ erro: "Solicitação para 'Outra Regional' não permitida." });
+    }
+
+    // Se chegou aqui e não cumpriu nenhum caso válido, retorna erro 403
+    return res.status(403).json({ erro: "Acesso não autorizado ou supervisão inválida." });
+
+  } catch (e) {
+    console.error("Erro API /api/gestao:", e);
+    return res.status(500).json({ erro: e.message });
+  }
+};
