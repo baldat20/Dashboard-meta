@@ -1,121 +1,197 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Painel de Gestão</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Painel de Gestão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Arial', sans-serif;
-      background: #f4f8fc;
-    }
+<style>
+  :root{
+    --blue:#42a7f5;
+    --bg:#f4f8fc;
+    --card:#fff;
+    --muted:#e6f3ff;
+    --accent:#0e76d1;
+    --shadow: 0 6px 20px rgba(0,0,0,0.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:'Montserrat',system-ui,Arial;
+    background:var(--bg);
+    color:#111;
+  }
 
-    header {
-      background: #42a7f5;
-      padding: 16px;
-      color: white;
-      font-size: 26px;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+  /* Header (black top bar with title left and supervisor right) */
+  header.topbar{
+    background:#000;
+    color:#fff;
+    padding:22px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  header.topbar h1{
+    margin:0;
+    font-size:34px;
+    font-weight:800;
+    letter-spacing: -0.4px;
+  }
+  header.topbar .sup-name{
+    font-size:22px;
+    font-weight:600;
+  }
 
-    .btn-sair {
-      background: #fff;
-      color: #000;
-      border: 3px solid black;
-      padding: 10px 25px;
-      font-size: 18px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
+  /* Thin blue band under header */
+  .subbar{
+    height:8px;
+    background:var(--blue);
+    box-shadow: inset 0 -2px 0 rgba(255,255,255,0.15);
+  }
 
-    .btn-sair:hover {
-      background: #000;
-      color: #fff;
-    }
+  /* container */
+  .container{
+    max-width:1150px;
+    margin:22px auto;
+    padding:0 18px;
+  }
 
-    .menu {
-      background: #e0f0ff;
-      padding: 10px;
-      display: flex;
-      gap: 10px;
-      border-bottom: 2px solid #42a7f5;
-      flex-wrap: wrap;
-    }
+  /* Tabs (big rounded as in mock) */
+  .tabs{
+    display:flex;
+    gap:22px;
+    align-items:center;
+    padding:18px 8px;
+  }
+  .tab-btn{
+    background: linear-gradient(180deg, #ffffff 0%, #f0f6fb 100%);
+    border-radius:34px;
+    padding:14px 36px;
+    font-size:20px;
+    font-weight:700;
+    border: 2px solid rgba(0,0,0,0.06);
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.06);
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background: var(--blue);
+    color:white;
+    box-shadow: 0 8px 24px rgba(66,167,245,0.2);
+    transform: translateY(-2px);
+  }
 
-    .menu button {
-      padding: 10px 16px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      background: #b9dcff;
-      transition: 0.2s;
-    }
+  /* Card table area */
+  .card {
+    margin-top:18px;
+    background:var(--card);
+    border-radius:12px;
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
 
-    .menu button:hover {
-      background: #9ccfff;
-    }
+  table {
+    width:100%;
+    border-collapse:collapse;
+    font-size:15px;
+  }
+  thead th{
+    background:var(--blue);
+    color:#fff;
+    padding:14px 18px;
+    text-align:left;
+    font-weight:700;
+  }
+  tbody td{
+    padding:18px;
+    border-bottom:1px solid #eef4fb;
+    vertical-align:middle;
+  }
+  tbody tr:last-child td{ border-bottom: none; }
 
-    .tabela-container {
-      margin: 20px;
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+  .col-name{
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+  }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+  /* Badge levels */
+  .badge {
+    display:inline-block;
+    padding:8px 14px;
+    border-radius:18px;
+    color:#fff;
+    font-weight:800;
+    font-size:13px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+  .nivel-super { background:#a129d9; }   /* SUPERAÇÃO */
+  .nivel-defin  { background:#42f554; color:#035d11;} /* DEFINIDA (use dark text) */
+  .nivel-toler  { background:#dbd951; color:#444;}
+  .nivel-nao    { background:#db4c42; }
 
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      text-align: left;
-      font-size: 16px;
-    }
+  /* bottom-left big sair button (floating) */
+  .floating-sair {
+    position: fixed;
+    left: 22px;
+    bottom: 22px;
+    background:#fff;
+    border:3px solid #000;
+    padding:12px 22px;
+    border-radius:8px;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  }
 
-    th {
-      background: #42a7f5;
-      color: white;
-    }
-
-    .tagNivel {
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-weight: bold;
-      color: white;
-      display: inline-block;
-      font-size: 14px;
-    }
-  </style>
+  /* responsive */
+  @media (max-width:900px){
+    header.topbar h1{font-size:22px}
+    header.topbar .sup-name{font-size:16px}
+    .tab-btn{padding:10px 18px; font-size:16px}
+    thead th, tbody td{padding:10px}
+    .floating-sair{left:12px; bottom:12px}
+  }
+</style>
 </head>
-
 <body>
 
-<header id="tituloPainel">
-  Painel de Gestão
-  <button class="btn-sair" onclick="window.location.href='index.html'">SAIR</button>
+<header class="topbar">
+  <h1>Painel de Gestão</h1>
+  <div class="sup-name" id="supNome">—</div>
 </header>
+<div class="subbar"></div>
 
-<div class="menu" id="menuSupervisoes"></div>
+<div class="container">
+  <div class="tabs" id="tabsRow">
+    <button class="tab-btn" id="tabAnal">Analista</button>
+    <button class="tab-btn" id="tabAux">Auxiliar</button>
+  </div>
 
-<div class="menu" id="menuTipoRelatorio" style="display:none;">
-  <button onclick="carregarRelatorio('analistas')">Analistas</button>
-  <button onclick="carregarRelatorio('auxiliares')">Auxiliares</button>
+  <div class="card" id="cardArea" style="display:none;">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>TMA</th>
+          <th>TME</th>
+          <th>Tempo Prod</th>
+          <th>% ABS</th>
+          <th style="text-align:center">Nível</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaBody">
+        <!-- linhas serão montadas pelo JS -->
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<div class="tabela-container" id="areaTabela"></div>
+<button class="floating-sair" id="btnSair">SAIR</button>
 
 <script src="gestao.js"></script>
-
 </body>
 </html>
