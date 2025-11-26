@@ -1,88 +1,161 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Painel da Gestão</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel de Gestão</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f8fc;
+    }
 
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-        }
+    header {
+      background: #42a7f5;
+      padding: 16px;
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+    }
 
-        .topbar {
-            background: #b30000;
-            padding: 15px;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-        }
+    .menu {
+      background: #e0f0ff;
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      border-bottom: 2px solid #42a7f5;
+    }
 
-        .container {
-            margin: 40px auto;
-            max-width: 900px;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.15);
-        }
+    .menu button {
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      background: #b9dcff;
+      transition: 0.2s;
+    }
 
-        h2 {
-            margin-top: 0;
-            color: #b30000;
-        }
+    .menu button:hover {
+      background: #9ccfff;
+    }
 
-        #info {
-            margin-bottom: 25px;
-            font-size: 18px;
-        }
+    #conteudo {
+      padding: 20px;
+    }
 
-        button {
-            padding: 10px 20px;
-            background: #b30000;
-            border: none;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            border-radius: 6px;
-        }
-    </style>
+    .tabela-container {
+      margin-top: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #42a7f5;
+      color: white;
+    }
+  </style>
 </head>
-
 <body>
+  <header id="tituloPainel">Painel de Gestão</header>
 
-    <div class="topbar">Painel - Gestão Operacional</div>
+  <div class="menu" id="menuSupervisoes">
+    <!-- Botões das supervisões serão carregados aqui via JS -->
+  </div>
 
-    <div class="container">
+  <div class="menu" id="menuTipoRelatorio" style="display:none;">
+    <button onclick="carregarRelatorio('analistas')">Analistas</button>
+    <button onclick="carregarRelatorio('auxiliares')">Auxiliares</button>
+  </div>
 
-        <h2>Bem-vindo(a)</h2>
-        <div id="info">Carregando informações...</div>
+  <div id="conteudo">
+    <div class="tabela-container" id="areaTabela"></div>
+  </div>
 
-        <div id="conteudo">
-            <!-- Aqui entra o conteúdo futuro da gestão -->
-            <p>Aqui você terá menus, dashboards e informações exclusivas da supervisão/coordenação.</p>
-        </div>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const nome = urlParams.get('nome');
+    const cargo = urlParams.get('cargo');
 
-        <br>
-        <button onclick="sair()">Sair</button>
-    </div>
+    const supervisoras = [
+      "Erika Silvestre Nunes",
+      "Agata Angel Pereira Oliveira",
+      "Joyce Carla Santos Marques",
+      "Renata Ferreira de Oliveira",
+      "Layra da Silva Reginaldo"
+    ];
 
-    <script>
-        // Pega os dados enviados via query string
-        const params = new URLSearchParams(window.location.search);
-        const nome = params.get("nome");
-        const cargo = params.get("cargo");
+    let supervisaoSelecionada = null;
 
-        document.getElementById("info").innerText =
-            (nome ? nome : "") + " — " + (cargo ? cargo : "Gestão");
+    document.getElementById("tituloPainel").innerText = `Painel de Gestão - ${nome}`;
 
-        function sair() {
-            window.location.href = "index.html";
-        }
-    </script>
+    window.onload = () => {
+      if (cargo.toLowerCase() === "coordenação" || cargo.toLowerCase() === "coordenacao") {
+        gerarMenuSupervisoes();
+      } else {
+        supervisaoSelecionada = nome;
+        document.getElementById("menuTipoRelatorio").style.display = "flex";
+      }
+    };
 
+    function gerarMenuSupervisoes() {
+      const menu = document.getElementById("menuSupervisoes");
+      menu.innerHTML = "";
+
+      supervisoras.forEach(sup => {
+        const btn = document.createElement("button");
+        btn.innerText = sup;
+        btn.onclick = () => selecionarSupervisao(sup);
+        menu.appendChild(btn);
+      });
+    }
+
+    function selecionarSupervisao(nomeSup) {
+      supervisaoSelecionada = nomeSup;
+      document.getElementById("menuTipoRelatorio").style.display = "flex";
+      document.getElementById("areaTabela").innerHTML = "<em>Selecione um relatório acima...</em>";
+    }
+
+    async function carregarRelatorio(tipo) {
+      if (!supervisaoSelecionada) return;
+
+      const resp = await fetch(`/api/gestao?tipo=${tipo}&supervisao=${encodeURIComponent(supervisaoSelecionada)}&cargo=${encodeURIComponent(cargo)}`);
+      const dados = await resp.json();
+
+      montarTabela(dados);
+    }
+
+    function montarTabela(lista) {
+      let html = `<table><tr>`;
+      Object.keys(lista[0]).forEach(col => {
+        html += `<th>${col}</th>`;
+      });
+      html += `</tr>`;
+
+      lista.forEach(linha => {
+        html += `<tr>`;
+        Object.values(linha).forEach(v => html += `<td>${v}</td>`);
+        html += `</tr>`;
+      });
+
+      html += `</table>`;
+
+      document.getElementById("areaTabela").innerHTML = html;
+    }
+  </script>
 </body>
 </html>
