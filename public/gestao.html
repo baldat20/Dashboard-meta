@@ -25,6 +25,7 @@
       display: flex;
       gap: 10px;
       border-bottom: 2px solid #42a7f5;
+      flex-wrap: wrap;
     }
 
     .menu button {
@@ -68,6 +69,13 @@
       background: #42a7f5;
       color: white;
     }
+
+    .tagNivel {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: bold;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
@@ -76,93 +84,15 @@
   <div class="menu" id="menuSupervisoes"></div>
 
   <div class="menu" id="menuTipoRelatorio" style="display:none;">
-    <button onclick="carregarRelatorio('analistas')">Analistas</button>
-    <button onclick="carregarRelatorio('auxiliares')">Auxiliares</button>
+    <button id="btnAnalistas">Analistas</button>
+    <button id="btnAuxiliares">Auxiliares</button>
   </div>
 
   <div id="conteudo">
     <div class="tabela-container" id="areaTabela"></div>
   </div>
 
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const nome = urlParams.get('nome');   // <-- Nome do usuário logado
-    const cargo = urlParams.get('cargo'); // <-- supervisão ou coordenação
-
-    const supervisoras = [
-      "Erika Silvestre Nunes",
-      "Agata Angel Pereira Oliveira",
-      "Joyce Carla Santos Marques",
-      "Renata Ferreira de Oliveira",
-      "Layra da Silva Reginaldo"
-    ];
-
-    let supervisaoSelecionada = null;
-
-    document.getElementById("tituloPainel").innerText = `Painel de Gestão - ${nome}`;
-
-    // SE FOR COORDENAÇÃO → MOSTRA MENUS
-    window.onload = () => {
-      if (cargo.toLowerCase() === "coordenação" || cargo.toLowerCase() === "coordenacao") {
-        gerarMenuSupervisoes();
-      } else {
-        // Se for SUPERVISÃO → só vê sua própria equipe
-        supervisaoSelecionada = nome;
-        document.getElementById("menuTipoRelatorio").style.display = "flex";
-      }
-    };
-
-    function gerarMenuSupervisoes() {
-      const menu = document.getElementById("menuSupervisoes");
-      menu.innerHTML = "";
-
-      supervisoras.forEach(sup => {
-        const btn = document.createElement("button");
-        btn.innerText = sup;
-        btn.onclick = () => selecionarSupervisao(sup);
-        menu.appendChild(btn);
-      });
-    }
-
-    function selecionarSupervisao(nomeSup) {
-      supervisaoSelecionada = nomeSup;
-      document.getElementById("menuTipoRelatorio").style.display = "flex";
-      document.getElementById("areaTabela").innerHTML = "<em>Selecione um relatório acima...</em>";
-    }
-
-    // 🔥 CORRIGIDO: cargo foi trocado por "nome" ao enviar para API
-    async function carregarRelatorio(tipo) {
-      if (!supervisaoSelecionada) return;
-
-      const resp = await fetch(
-        `/api/gestao?tipo=${tipo}&supervisao=${encodeURIComponent(supervisaoSelecionada)}&cargo=${encodeURIComponent(nome)}`
-      );
-
-      const dados = await resp.json();
-      montarTabela(dados);
-    }
-
-    function montarTabela(lista) {
-      if (!lista || lista.length === 0) {
-        document.getElementById("areaTabela").innerHTML = "<em>Nenhum dado encontrado...</em>";
-        return;
-      }
-
-      let html = `<table><tr>`;
-      Object.keys(lista[0]).forEach(col => {
-        html += `<th>${col}</th>`;
-      });
-      html += `</tr>`;
-
-      lista.forEach(linha => {
-        html += `<tr>`;
-        Object.values(linha).forEach(v => html += `<td>${v}</td>`);
-        html += `</tr>`;
-      });
-
-      html += `</table>`;
-      document.getElementById("areaTabela").innerHTML = html;
-    }
-  </script>
+  <!-- carregar o script de frontend -->
+  <script src="gestao.js"></script>
 </body>
 </html>
