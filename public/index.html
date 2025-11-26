@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Painel de Metas </title>
   <style>
-    /* Fundo com degradê suave e uniforme */
     body { 
       font-family: Arial, sans-serif;
       margin: 0;
@@ -27,13 +26,11 @@
 
     #dash { display:none; width: 720px; }
 
-    /* Painel de Metas em preto */
     #login h1 {
       color: #000 !important;
       text-shadow: none !important;
     }
 
-    /* Inputs em negrito */
     #login input {
       padding: 10px;
       width: 90%;
@@ -88,8 +85,16 @@
           return;
         }
 
+        // 🔹 Redirecionamento para gestão
+        if (data.perfil === "gestao") {
+          window.location.href = `gestao.html?nome=${encodeURIComponent(data.nome)}&cargo=${encodeURIComponent(data.cargo)}`;
+          return;
+        }
+
+        // 🔹 Fluxo normal (Analista / Auxiliar)
         document.getElementById('login').style.display = 'none';
         document.getElementById('dash').style.display = 'block';
+
         document.getElementById('nome').innerText = data.nome || '';
         document.getElementById('cargo').innerText = (data.tipo || '').toUpperCase();
 
