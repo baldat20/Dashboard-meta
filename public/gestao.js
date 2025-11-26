@@ -1,7 +1,8 @@
-// ===========================
-//   PARÂMETROS DA URL
-// ===========================
+// =============================
+// Recebendo parâmetros
+// =============================
 const urlParams = new URLSearchParams(window.location.search);
+
 if (!urlParams.get("nome") || !urlParams.get("cargo")) {
   window.location.href = "index.html";
 }
@@ -9,9 +10,9 @@ if (!urlParams.get("nome") || !urlParams.get("cargo")) {
 const nome = urlParams.get("nome");
 const cargo = urlParams.get("cargo");
 
-// ===========================
-//   FIXO: LISTA SUPERVISORAS
-// ===========================
+// =============================
+// Supervisoras da coordenação
+// =============================
 const SUPERVISORES = [
   "Erika Silvestre Nunes",
   "Agata Angel Pereira Oliveira",
@@ -34,116 +35,126 @@ function isCoord() {
   return cargo === "Leticia Caroline Da Silva";
 }
 
-// ===========================
-//   INICIALIZAÇÃO
-// ===========================
+// =============================
+// Inicialização
+// =============================
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("supNome").innerText = nome;
-  document.getElementById("btnSair").onclick = () => (window.location.href = "index.html");
 
-  // Aba eventos
+  // abas
   document.getElementById("tabAnal").onclick = () => selecionarAba("analistas");
   document.getElementById("tabAux").onclick = () => selecionarAba("auxiliares");
 
-  if (isCoord()) montarMenuCoord();
-  else iniciarSupervisor();
+  document.getElementById("btnVoltarSup").onclick = voltarParaSupervisoras;
+
+  if (isCoord()) {
+    montarMenuSupervisoras();
+  } else {
+    supervisaoSelecionada = nome;
+    document.getElementById("tabsRow").style.display = "flex";
+    selecionarAba("analistas");
+  }
 });
 
-// ===========================
-//   COORDENAÇÃO
-// ===========================
-function montarMenuCoord() {
-  const menu = document.getElementById("menuCoord");
-  const divBtns = document.getElementById("coordBtns");
+// =============================
+// Coordenação — Lista supervisoras
+// =============================
+function montarMenuSupervisoras() {
+  const div = document.getElementById("menuCoord");
+  div.style.display = "flex";
+  div.innerHTML = "";
 
-  menu.style.display = "block";
-
-  SUPERVISORES.forEach(sup => {
+  SUPERVISORES.forEach(s => {
     const btn = document.createElement("button");
     btn.className = "sup-btn";
-    btn.innerText = sup;
-    btn.onclick = () => selecionarSupervisora(sup);
-    divBtns.appendChild(btn);
+    btn.innerText = s;
+    btn.onclick = () => selecionarSupervisora(s);
+    div.appendChild(btn);
   });
 }
 
-function selecionarSupervisora(sup) {
-  supervisaoSelecionada = sup;
+// =============================
+function selecionarSupervisora(nomeSup) {
+  supervisaoSelecionada = nomeSup;
+
   document.getElementById("menuCoord").style.display = "none";
-
   document.getElementById("tabsRow").style.display = "flex";
+  document.getElementById("btnVoltarSup").style.display = "inline-block";
+
   selecionarAba("analistas");
 }
 
-// ===========================
-//   SUPERVISOR
-// ===========================
-function iniciarSupervisor() {
-  supervisaoSelecionada = nome;
-  document.getElementById("tabsRow").style.display = "flex";
-  selecionarAba("analistas");
+// =============================
+function voltarParaSupervisoras() {
+  supervisaoSelecionada = null;
+
+  document.getElementById("menuCoord").style.display = "flex";
+  document.getElementById("tabsRow").style.display = "none";
+  document.getElementById("cardArea").style.display = "none";
+  document.getElementById("btnVoltarSup").style.display = "none";
 }
 
-// ===========================
-//   AÇÃO SELECIONAR ABA
-// ===========================
+// =============================
 function selecionarAba(tipo) {
   tipoAtual = tipo;
 
-  document.getElementById("tabAnal").classList.remove("active");
-  document.getElementById("tabAux").classList.remove("active");
+  document.getElementById("tabAnal").classList.toggle("active", tipo === "analistas");
+  document.getElementById("tabAux").classList.toggle("active", tipo === "auxiliares");
 
-  if (tipo === "analistas") document.getElementById("tabAnal").classList.add("active");
-  else document.getElementById("tabAux").classList.add("active");
-
-  carregarRelatorio(tipo);
+  carregarRelatorio(tipoAtual);
 }
 
-// ===========================
-//   CARREGAR API /api/gestao
-// ===========================
+// =============================
+// Carregar API
+// =============================
 async function carregarRelatorio(tipo) {
   if (!supervisaoSelecionada) return;
 
   document.getElementById("cardArea").style.display = "block";
-  document.getElementById("tabelaBody").innerHTML =
-    `<tr><td colspan="6">Carregando...</td></tr>`;
+  document.getElementById("tabelaBody").innerHTML = `
+    <tr><td colspan="6" style="padding:20px">Carregando...</td></tr>
+  `;
 
-  const url =
-    `/api/gestao?tipo=${encodeURIComponent(tipo)}&supervisao=${encodeURIComponent(supervisaoSelecionada)}&cargo=${encodeURIComponent(nome)}`;
+  const url = `/api/gestao?tipo=${tipo}&supervisao=${encodeURIComponent(supervisaoSelecionada)}&cargo=${encodeURIComponent(nome)}`;
 
-  const resp = await fetch(url);
-  const dados = await resp.json();
+  try {
+    const resp = await fetch(url);
+    const dados = await resp.json();
 
-  const lista = tipo === "analistas" ? dados.analistas : dados.auxiliares;
-  montarTabela(lista || []);
+    const lista = tipo === "analistas" ? dados.analistas : dados.auxiliares;
+
+    montarTabela(lista);
+  } catch (e) {
+    document.getElementById("tabelaBody").innerHTML = `
+      <tr><td colspan="6">Erro ao carregar: ${e.message}</td></tr>
+    `;
+  }
 }
 
-// ===========================
-//   MONTAR TABELA
-// ===========================
+// =============================
 function montarTabela(lista) {
-  if (!lista.length) {
-    document.getElementById("tabelaBody").innerHTML =
-      `<tr><td colspan="6">Nenhum registro encontrado.</td></tr>`;
+  if (!lista || lista.length === 0) {
+    document.getElementById("tabelaBody").innerHTML = `
+      <tr><td colspan="6" style="padding:20px">Nenhum dado encontrado.</td></tr>
+    `;
     return;
   }
 
   let html = "";
+
   lista.forEach(row => {
-    const nivelClass = CORES_NIVEL[(row.nivel || "").toUpperCase()] || "";
+    const corClass = CORES_NIVEL[row.nivel] || "";
 
     html += `
       <tr>
-        <td>${row.nome}</td>
+        <td class="col-name">${row.nome}</td>
         <td>${row.tma || row.eficiencia || ""}</td>
         <td>${row.tme || row.vrep || ""}</td>
         <td>${row.tempoProd || ""}</td>
         <td>${row.abs || ""}</td>
-        <td style="text-align:center;">
-          <span class="badge ${nivelClass}">${row.nivel}</span>
-        </td>
-      </tr>`;
+        <td style="text-align:center"><span class="badge ${corClass}">${row.nivel}</span></td>
+      </tr>
+    `;
   });
 
   document.getElementById("tabelaBody").innerHTML = html;
