@@ -1,166 +1,121 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<title>Painel de Gestão - Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel de Gestão</title>
 
-<style>
-  body {
-    margin: 0;
-    font-family: 'Arial', sans-serif;
-    background: #e9ecef;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: #f4f8fc;
+    }
 
-  .login-container {
-    width: 480px;
-    background: #ffffff;
-    padding: 40px 50px;
-    border-radius: 18px;
-    box-shadow: 0px 12px 20px rgba(0,0,0,0.15);
-    text-align: center;
-  }
+    header {
+      background: #42a7f5;
+      padding: 16px;
+      color: white;
+      font-size: 26px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-  .titulo-header {
-    background: #000;
-    color: #fff;
-    font-size: 38px;
-    padding: 14px 0;
-    border-radius: 12px;
-    font-weight: bold;
-    margin-bottom: 35px;
-  }
+    .btn-sair {
+      background: #fff;
+      color: #000;
+      border: 3px solid black;
+      padding: 10px 25px;
+      font-size: 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
 
-  .input-group {
-    text-align: left;
-    margin-bottom: 25px;
-  }
+    .btn-sair:hover {
+      background: #000;
+      color: #fff;
+    }
 
-  .input-group label {
-    font-size: 20px;
-    font-weight: bold;
-  }
+    .menu {
+      background: #e0f0ff;
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      border-bottom: 2px solid #42a7f5;
+      flex-wrap: wrap;
+    }
 
-  .input-group input {
-    width: 100%;
-    margin-top: 5px;
-    padding: 12px 14px;
-    border-radius: 10px;
-    border: 2px solid #ccc;
-    font-size: 18px;
-    font-weight: bold;
-    outline: none;
-  }
+    .menu button {
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      background: #b9dcff;
+      transition: 0.2s;
+    }
 
-  .btn-login {
-    width: 100%;
-    padding: 16px;
-    background: #42a7f5;
-    color: #fff;
-    font-size: 22px;
-    font-weight: bold;
-    border: none;
-    border-radius: 40px;
-    cursor: pointer;
-    box-shadow: 0px 6px 0px #2c7ac0;
-    transition: 0.2s;
-  }
+    .menu button:hover {
+      background: #9ccfff;
+    }
 
-  .btn-login:hover {
-    background: #3296e3;
-  }
+    .tabela-container {
+      margin: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
 
-  .erro {
-    margin-top: 16px;
-    color: red;
-    font-size: 18px;
-    font-weight: bold;
-  }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-  .btn-sair {
-    margin-top: 40px;
-    background: #fff;
-    color: #000;
-    border: 3px solid black;
-    padding: 10px 25px;
-    font-size: 22px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      font-size: 16px;
+    }
 
-  .btn-sair:hover {
-    background: #000;
-    color: #fff;
-  }
+    th {
+      background: #42a7f5;
+      color: white;
+    }
 
-</style>
+    .tagNivel {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      color: white;
+      display: inline-block;
+      font-size: 14px;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="login-container">
-
-  <div class="titulo-header">
-    Painel de Gestão
-  </div>
-
-  <div class="input-group">
-    <label>Usuário</label>
-    <input id="usuario" type="text" placeholder="Digite seu usuário" />
-  </div>
-
-  <div class="input-group">
-    <label>Senha</label>
-    <input id="senha" type="password" placeholder="Digite sua senha" />
-  </div>
-
-  <button class="btn-login" onclick="entrar()">Entrar</button>
-
-  <p id="erro" class="erro"></p>
-
+<header id="tituloPainel">
+  Painel de Gestão
   <button class="btn-sair" onclick="window.location.href='index.html'">SAIR</button>
+</header>
 
+<div class="menu" id="menuSupervisoes"></div>
+
+<div class="menu" id="menuTipoRelatorio" style="display:none;">
+  <button onclick="carregarRelatorio('analistas')">Analistas</button>
+  <button onclick="carregarRelatorio('auxiliares')">Auxiliares</button>
 </div>
 
-<script>
-  async function entrar() {
-    const usuario = document.getElementById("usuario").value.trim();
-    const senha = document.getElementById("senha").value.trim();
-    document.getElementById("erro").innerText = "";
+<div class="tabela-container" id="areaTabela"></div>
 
-    if (!usuario || !senha) {
-      document.getElementById("erro").innerText = "Preencha todos os campos!";
-      return;
-    }
-
-    try {
-      const params = new URLSearchParams({ usuario, senha });
-      const res = await fetch('/api/login?' + params.toString());
-      const data = await res.json();
-
-      if (data.erro) {
-        document.getElementById("erro").innerText = data.erro;
-        return;
-      }
-
-      // se for gestão → vai pra página de gestão
-      if (data.perfil === "gestao") {
-        window.location.href = `gestao.html?nome=${encodeURIComponent(data.nome)}&cargo=${encodeURIComponent(data.cargo)}`;
-        return;
-      }
-
-      document.getElementById("erro").innerText = "Acesso não autorizado para este painel.";
-
-    } catch (e) {
-      document.getElementById("erro").innerText = "Erro: " + e.message;
-    }
-  }
-</script>
+<script src="gestao.js"></script>
 
 </body>
 </html>
