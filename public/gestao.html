@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Painel de Gestão</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
@@ -12,14 +13,16 @@
   :root{
     --blue:#42a7f5;
     --card:#fff;
-    --shadow:0 6px 20px rgba(0,0,0,0.08);
+    --shadow: 0 6px 20px rgba(0,0,0,0.08);
   }
-  *{box-sizing:border-box}
+
+  *{box-sizing:border-box;}
   body{
     margin:0;
-    font-family:'Montserrat',Arial;
+    font-family:'Montserrat',system-ui,Arial;
     background: linear-gradient(135deg, #1e6fec 0%, #b9e2ff 100%);
-    background-attachment: fixed;
+    height:100vh;
+    background-attachment:fixed;
     color:#111;
   }
 
@@ -28,13 +31,23 @@
     color:#fff;
     padding:22px 28px;
     display:flex;
-    justify-content:space-between;
     align-items:center;
+    justify-content:space-between;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
-  header.topbar h1{margin:0;font-size:34px;font-weight:800;}
-  .sup-name{font-size:22px;font-weight:600;}
-
-  .subbar{height:8px;background:var(--blue);}
+  header.topbar h1{
+    margin:0;
+    font-size:34px;
+    font-weight:800;
+  }
+  header.topbar .sup-name{
+    font-size:22px;
+    font-weight:600;
+  }
+  .subbar{
+    height:8px;
+    background:var(--blue);
+  }
 
   .container{
     max-width:1150px;
@@ -45,89 +58,118 @@
   .tabs{
     display:flex;
     gap:22px;
+    align-items:center;
     padding:18px 8px;
+    display:none;
   }
 
   .tab-btn{
-    background:linear-gradient(180deg,#fff,#f0f6fb);
+    background: linear-gradient(180deg, #ffffff 0%, #f0f6fb 100%);
     border-radius:34px;
     padding:14px 36px;
     font-size:20px;
     font-weight:700;
-    border:2px solid rgba(0,0,0,0.06);
+    border: 2px solid rgba(0,0,0,0.08);
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.08);
     cursor:pointer;
-    box-shadow:6px 6px 0 rgba(0,0,0,0.06);
   }
   .tab-btn.active{
-    background:var(--blue);
-    color:#fff;
-    box-shadow:0 8px 24px rgba(66,167,245,0.3);
-    transform:translateY(-2px);
+    background: var(--blue);
+    color:white;
+    box-shadow: 0 8px 24px rgba(66,167,245,0.2);
   }
 
-  #menuCoord{
-    margin-top:25px;
-    padding:22px;
-    background:rgba(255,255,255,0.35);
-    border-radius:12px;
-    backdrop-filter:blur(12px);
-    box-shadow: var(--shadow);
-  }
-
-  .sup-btn{
-    padding:14px 24px;
+  /* botão voltar */
+  #btnVoltarSup{
+    display:none;
+    background:#fff;
     border:none;
+    padding:12px 22px;
     font-weight:700;
+    font-size:16px;
     border-radius:12px;
     cursor:pointer;
-    background:#fff;
-    box-shadow:0 6px 14px rgba(0,0,0,0.12);
+    margin-left:10px;
+    margin-bottom:10px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+  #btnVoltarSup:hover{
+    background:#f1f1f1;
   }
 
+  /* botões supervisoras */
+  #menuCoord{
+    margin-top:20px;
+    display:none;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .sup-btn{
+    padding:12px 22px;
+    background:white;
+    border-radius:12px;
+    border:none;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 8px 16px rgba(0,0,0,0.08);
+    font-size:16px;
+  }
+  .sup-btn:hover{
+    background:#eef6ff;
+  }
+
+  /* tabela */
   .card{
     margin-top:18px;
-    background:#fff;
+    background:var(--card);
     border-radius:12px;
-    box-shadow:var(--shadow);
+    box-shadow: var(--shadow);
+    display:none;
     overflow:hidden;
   }
 
-  table{width:100%;border-collapse:collapse;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:15px;
+  }
   thead th{
     background:var(--blue);
     color:#fff;
     padding:14px 18px;
     text-align:left;
+    font-weight:700;
   }
   tbody td{
     padding:18px;
     border-bottom:1px solid #eef4fb;
   }
 
+  .col-name{font-weight:800;}
   .badge{
-    padding:8px 14px;
-    border-radius:18px;
+    padding:6px 14px;
     font-weight:800;
-    font-size:13px;
-    color:#fff;
+    border-radius:18px;
+    color:white;
   }
-  .nivel-super{background:#a129d9;}
-  .nivel-defin{background:#42f554;color:#064a11;}
-  .nivel-toler{background:#dbd951;color:#333;}
-  .nivel-nao{background:#db4c42;}
+  .nivel-super{ background:#a129d9; }
+  .nivel-defin{ background:#42f554; color:#075b15; }
+  .nivel-toler{ background:#dbd951; color:#333; }
+  .nivel-nao{ background:#db4c42; }
 
   .floating-sair{
     position:fixed;
-    left:22px;
     bottom:22px;
+    left:22px;
+    background:white;
+    border:3px solid black;
     padding:12px 22px;
-    background:#fff;
-    border:3px solid #000;
-    border-radius:8px;
+    border-radius:10px;
     font-weight:800;
     cursor:pointer;
-    box-shadow:0 10px 30px rgba(0,0,0,0.12);
+    box-shadow:0 8px 16px rgba(0,0,0,0.2);
   }
+
 </style>
 </head>
 
@@ -141,18 +183,20 @@
 
 <div class="container">
 
-  <!-- MENU DA COORDENAÇÃO (MOSTRA APENAS PARA LETICIA) -->
-  <div id="menuCoord" style="display:none;">
-    <h2 style="font-weight:800;margin:0 0 16px 0;">Selecione uma Supervisão</h2>
-    <div id="coordBtns" style="display:flex;flex-wrap:wrap;gap:18px;"></div>
-  </div>
+  <!-- MENU DA COORDENAÇÃO -->
+  <div id="menuCoord"></div>
 
-  <div class="tabs" id="tabsRow" style="display:none;">
+  <!-- BOTÃO VOLTAR -->
+  <button id="btnVoltarSup">⬅ Voltar para Supervisoras</button>
+
+  <!-- ABAS -->
+  <div class="tabs" id="tabsRow">
     <button class="tab-btn" id="tabAnal">Analista</button>
     <button class="tab-btn" id="tabAux">Auxiliar</button>
   </div>
 
-  <div class="card" id="cardArea" style="display:none;">
+  <!-- TABELA -->
+  <div class="card" id="cardArea">
     <table>
       <thead>
         <tr>
@@ -167,9 +211,10 @@
       <tbody id="tabelaBody"></tbody>
     </table>
   </div>
+
 </div>
 
-<button class="floating-sair" id="btnSair">SAIR</button>
+<button class="floating-sair" onclick="window.location.href='index.html'">SAIR</button>
 
 <script src="gestao.js"></script>
 </body>
