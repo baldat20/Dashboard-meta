@@ -79,7 +79,7 @@
     .ok-msg { color:#28a745; }
     .warn-msg { color:#ff8800; }
 
-    /* tabela simples abaixo */
+    /* tabela */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -162,18 +162,24 @@
 
 <script>
 
+  // -------------------------
+  // Converter "00:00:00" para segundos
+  // -------------------------
   function parseTime(str) {
     if (!str) return 0;
     const p = str.split(":").map(Number);
     return p[0]*3600 + p[1]*60 + (p[2]||0);
   }
 
+  // -------------------------------
+  // Avaliação dos indicadores
+  // -------------------------------
   function calcularIndicadores(data) {
 
     const TMA = parseTime(data.TMA);
     const TME = parseTime(data.TME);
-    const PROD = parseTime(data.TempoProdutivo);
-    const ABS = parseFloat(data.PercentualABS.replace("%",""));
+    const PROD = parseTime(data["Tempo Produtivo"]);
+    const ABS = parseFloat(data["Percentual ABS"].replace("%",""));
 
     const okTMA = TMA <= parseTime("00:08:00");
     const okTME = TME <= parseTime("00:00:35");
@@ -185,12 +191,24 @@
     }
 
     let ajustes = [];
-    if (TMA > parseTime("00:08:00")) ajustes.push("Ajustar TMA");
-    if (TME > parseTime("00:00:35")) ajustes.push("Ajustar TME");
-    if (PROD < parseTime("06:20:00")) ajustes.push("Aumentar tempo produtivo");
-    if (ABS > 10) ajustes.push("Melhorar frequência");
+    if (!okTMA) ajustes.push("Ajustar TMA");
+    if (!okTME) ajustes.push("Ajustar TME");
+    if (!okProd) ajustes.push("Aumentar tempo produtivo");
+    if (!okAbs) ajustes.push("Melhorar frequência");
 
     return { msg: ajustes.join(", "), tipo:"warn" };
+  }
+
+  // --------------------------------
+  // Humanizar nomes de colunas
+  // --------------------------------
+  function formatKey(key) {
+    const map = {
+      TempoProdutivo: "Tempo Produtivo",
+      PercentualABS: "Percentual ABS",
+      PercentualSalario: "Percentual Salário"
+    };
+    return map[key] || key;
   }
 
   async function entrar() {
@@ -208,20 +226,27 @@
         return;
       }
 
+      // Se for supervisão, redireciona
       if (data.perfil === "gestao") {
-        window.location.href = `gestao.html?nome=${encodeURIComponent(data.nome)}&cargo=${encodeURIComponent(data.nome)}`;
+        window.location.href =
+          `gestao.html?nome=${encodeURIComponent(data.nome)}&cargo=${encodeURIComponent(data.nome)}`;
         return;
       }
 
+      // Mostrar dashboard
       document.getElementById('login').style.display = 'none';
       document.getElementById('dash').style.display = 'block';
 
       document.getElementById('nome').innerText = data.nome;
       document.getElementById('cargo').innerText = data.tipo.toUpperCase();
 
-      /* ---------- MOSTRAR METAS + VALIDAR ---------- */
-      if (data.tipo === "analista") {
+      // Ajustar nomes das chaves (humanizar)
+      if (data.TempoProdutivo) data["Tempo Produtivo"] = data.TempoProdutivo;
+      if (data.PercentualABS) data["Percentual ABS"] = data.PercentualABS;
+      if (data.PercentualSalario) data["Percentual Salário"] = data.PercentualSalario;
 
+      // Mostrar cards e indicadores se for analista
+      if (data.tipo === "analista") {
         document.getElementById("cardsMetas").style.display = "flex";
 
         const result = calcularIndicadores(data);
@@ -231,13 +256,23 @@
         msgBox.className = result.tipo === "ok" ? "ok-msg" : "warn-msg";
       }
 
-      /* ---------- tabela de dados ---------- */
-      let html = '<table>';
+      // ----------------------
+      // Montar tabela formatada
+      // ----------------------
+      let html = "<table>";
+
       for (let key in data) {
-        if (key === 'tipo' || key === 'nome') continue;
-        html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
+        if (["tipo","nome","perfil"].includes(key)) continue;
+
+        html += `
+          <tr>
+            <th>${formatKey(key)}</th>
+            <td>${data[key]}</td>
+          </tr>
+        `;
       }
-      html += '</table>';
+
+      html += "</table>";
 
       document.getElementById('dados').innerHTML = html;
 
