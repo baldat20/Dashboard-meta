@@ -52,21 +52,24 @@ module.exports = async (req, res) => {
       spreadsheetId: sheetId,
       range: "Relatorio Analistas!A2:O"
     });
-    for (let row of (analResp.data.values || [])) {
-      if (row[0] === usuario && row[2] === senha) { // lembre: senha dos analistas está na coluna C
-        return res.json({
-          tipo: "analista",
-          nome: row[0],
-          TMA: row[4],
-          TME: row[5],
-          TempoProdutivo: row[6],
-          PercentualABS: row[7],
-          PercentualSalario: row[13],
-          Nivel: row[14],
-          indicadores: [] // ou preencha se quiser
-        });
-      }
-    }
+ for (let row of (analResp.data.values || [])) {
+  if (row[0] === usuario && row[2] === senha) { // senha dos analistas está na coluna C
+    return res.json({
+      tipo: "analista",
+      nome: row[0],
+      TMA: row[4],
+      TME: row[5],
+
+      // novos nomes com espaço
+      "Tempo Produtivo": row[6],
+      "Percentual ABS": row[7],
+      "Percentual Salário": row[13],
+
+      Nivel: row[14]
+    });
+  }
+}
+
 
     // 3) Auxiliares
     const auxResp = await sheets.spreadsheets.values.get({
