@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Painel de Metas</title>
+
   <style>
     body { 
       font-family: Arial, sans-serif;
@@ -60,6 +61,7 @@
     .sup-card { background: #c8f7c5; }
     .def-card { background: #fff3b2; }
     .tol-card { background: #ffe1b5; }
+    .insuf-card { background: #f8bbbb; }
 
     .meta-title {
       font-size: 18px;
@@ -120,31 +122,73 @@
     <!-- CARDS DE METAS -->
     <div id="cardsMetas">
 
-      <div class="meta-card sup-card">
-        <div class="meta-title">SUPERAÇÃO</div>
-        <div>TMA: <strong>00:08:00</strong></div>
-        <div>TME: <strong>00:00:35</strong></div>
-        <div>Produtivo: <strong>06:20:00</strong></div>
-        <div>Abs: <strong>10%</strong></div>
-        <div>Atingimento: <strong>60%</strong></div>
+      <!-- ---------------- CARDS ANALISTAS ---------------- -->
+      <div id="cardsAnalistas" style="display:none">
+
+        <div class="meta-card sup-card">
+          <div class="meta-title">SUPERAÇÃO</div>
+          <div>TMA: <strong>00:08:00</strong></div>
+          <div>TME: <strong>00:00:35</strong></div>
+          <div>Produtivo: <strong>06:20:00</strong></div>
+          <div>Abs: <strong>10%</strong></div>
+          <div>Atingimento: <strong>60%</strong></div>
+        </div>
+
+        <div class="meta-card def-card">
+          <div class="meta-title">DEFINIDA</div>
+          <div>TMA: <strong>00:08:40</strong></div>
+          <div>TME: <strong>00:00:45</strong></div>
+          <div>Produtivo: <strong>06:20:00</strong></div>
+          <div>Abs: <strong>10%</strong></div>
+          <div>Atingimento: <strong>40%</strong></div>
+        </div>
+
+        <div class="meta-card tol-card">
+          <div class="meta-title">TOLERÁVEL</div>
+          <div>TMA: <strong>00:09:30</strong></div>
+          <div>TME: <strong>00:01:00</strong></div>
+          <div>Produtivo: <strong>06:20:00</strong></div>
+          <div>Abs: <strong>10%</strong></div>
+          <div>Atingimento: <strong>20%</strong></div>
+        </div>
+
       </div>
 
-      <div class="meta-card def-card">
-        <div class="meta-title">DEFINIDA</div>
-        <div>TMA: <strong>00:08:40</strong></div>
-        <div>TME: <strong>00:00:45</strong></div>
-        <div>Produtivo: <strong>06:20:00</strong></div>
-        <div>Abs: <strong>10%</strong></div>
-        <div>Atingimento: <strong>40%</strong></div>
-      </div>
+      <!-- ---------------- CARDS AUXILIARES ---------------- -->
+      <div id="cardsAuxiliares" style="display:none">
 
-      <div class="meta-card tol-card">
-        <div class="meta-title">TOLERÁVEL</div>
-        <div>TMA: <strong>00:09:30</strong></div>
-        <div>TME: <strong>00:01:00</strong></div>
-        <div>Produtivo: <strong>06:20:00</strong></div>
-        <div>Abs: <strong>10%</strong></div>
-        <div>Atingimento: <strong>20%</strong></div>
+        <div class="meta-card sup-card">
+          <div class="meta-title">SUPERAÇÃO</div>
+          <div>Eficiência: <strong>86.9%</strong></div>
+          <div>Reparo 24h: <strong>90%</strong></div>
+          <div>% ABS: <strong>10%</strong></div>
+          <div>Atingimento: <strong>60%</strong></div>
+        </div>
+
+        <div class="meta-card def-card">
+          <div class="meta-title">DEFINIDA</div>
+          <div>Eficiência: <strong>81.9%</strong></div>
+          <div>Reparo 24h: <strong>85%</strong></div>
+          <div>% ABS: <strong>10%</strong></div>
+          <div>Atingimento: <strong>40%</strong></div>
+        </div>
+
+        <div class="meta-card tol-card">
+          <div class="meta-title">TOLERÁVEL</div>
+          <div>Eficiência: <strong>76.9%</strong></div>
+          <div>Reparo 24h: <strong>80%</strong></div>
+          <div>% ABS: <strong>10%</strong></div>
+          <div>Atingimento: <strong>20%</strong></div>
+        </div>
+
+        <div class="meta-card insuf-card">
+          <div class="meta-title">INSUFICIENTE</div>
+          <div>Eficiência: <strong>0%</strong></div>
+          <div>Reparo 24h: <strong>0%</strong></div>
+          <div>% ABS: <strong>0%</strong></div>
+          <div>Atingimento: <strong>0%</strong></div>
+        </div>
+
       </div>
 
     </div>
@@ -162,19 +206,14 @@
 
 <script>
 
-  // -------------------------
-  // Converter "00:00:00" para segundos
-  // -------------------------
   function parseTime(str) {
     if (!str) return 0;
     const p = str.split(":").map(Number);
     return p[0]*3600 + p[1]*60 + (p[2]||0);
   }
 
-  // -------------------------------
-  // Avaliação dos indicadores
-  // -------------------------------
-  function calcularIndicadores(data) {
+  /* ---------------------- ANALISTAS ---------------------- */
+  function calcularIndicadoresAnalista(data) {
 
     const TMA = parseTime(data.TMA);
     const TME = parseTime(data.TME);
@@ -199,94 +238,103 @@
     return { msg: ajustes.join(", "), tipo:"warn" };
   }
 
-  // --------------------------------
-  // Humanizar nomes de colunas
-  // --------------------------------
-  function formatKey(key) {
-    const map = {
-      TempoProdutivo: "Tempo Produtivo",
-      PercentualABS: "Percentual ABS",
-      PercentualSalario: "Percentual Salário"
-    };
-    return map[key] || key;
+  /* ---------------------- AUXILIARES ---------------------- */
+  function calcularIndicadoresAuxiliar(data) {
+
+    const ef = parseFloat((data.EFICIENCIA || "0").replace("%",""));
+    const rep = parseFloat((data.VREP || "0").replace("%",""));
+    const abs = parseFloat((data.PercentualABS || "0").replace("%",""));
+
+    const okEf = ef >= 86.9;
+    const okRep = rep >= 90;
+    const okAbs = abs <= 10;
+
+    if (okEf && okRep && okAbs) {
+      return { msg:"Manter desempenho", tipo:"ok" };
+    }
+
+    let ajustes = [];
+    if (!okEf) ajustes.push("Melhorar eficiência");
+    if (!okRep) ajustes.push("Melhorar reparo 24h");
+    if (!okAbs) ajustes.push("Melhorar %ABS");
+
+    return { msg: ajustes.join(", "), tipo:"warn" };
   }
+
 
   async function entrar() {
-    const u = document.getElementById('usuario').value;
-    const s = document.getElementById('senha').value;
-    document.getElementById('erro').innerText = '';
+    const u = usuario.value;
+    const s = senha.value;
 
-    try {
-      const params = new URLSearchParams({ usuario: u, senha: s });
-      const res = await fetch('/api/login?' + params.toString());
-      const data = await res.json();
+    erro.innerText = "";
 
-      if (data.erro || data.success === false) {
-        document.getElementById('erro').innerText = data.erro || 'Login inválido';
-        return;
-      }
+    const params = new URLSearchParams({ usuario:u, senha:s });
+    const res = await fetch("/api/login?" + params);
+    const data = await res.json();
 
-      // Se for supervisão, redireciona
-      if (data.perfil === "gestao") {
-        window.location.href =
-          `gestao.html?nome=${encodeURIComponent(data.nome)}&cargo=${encodeURIComponent(data.nome)}`;
-        return;
-      }
-
-      // Mostrar dashboard
-      document.getElementById('login').style.display = 'none';
-      document.getElementById('dash').style.display = 'block';
-
-      document.getElementById('nome').innerText = data.nome;
-      document.getElementById('cargo').innerText = data.tipo.toUpperCase();
-
-      // Ajustar nomes das chaves (humanizar)
-      if (data.TempoProdutivo) data["Tempo Produtivo"] = data.TempoProdutivo;
-      if (data.PercentualABS) data["Percentual ABS"] = data.PercentualABS;
-      if (data.PercentualSalario) data["Percentual Salário"] = data.PercentualSalario;
-
-      // Mostrar cards e indicadores se for analista
-      if (data.tipo === "analista") {
-        document.getElementById("cardsMetas").style.display = "flex";
-
-        const result = calcularIndicadores(data);
-        const msgBox = document.getElementById("indicadoresMensagem");
-
-        msgBox.innerText = result.msg;
-        msgBox.className = result.tipo === "ok" ? "ok-msg" : "warn-msg";
-      }
-
-      // ----------------------
-      // Montar tabela formatada
-      // ----------------------
-      let html = "<table>";
-
-      for (let key in data) {
-        if (["tipo","nome","perfil"].includes(key)) continue;
-
-        html += `
-          <tr>
-            <th>${formatKey(key)}</th>
-            <td>${data[key]}</td>
-          </tr>
-        `;
-      }
-
-      html += "</table>";
-
-      document.getElementById('dados').innerHTML = html;
-
-    } catch (e) {
-      document.getElementById('erro').innerText = 'Erro: ' + e.message;
+    if (data.erro) {
+      erro.innerText = data.erro;
+      return;
     }
+
+    if (data.perfil === "gestao") {
+      window.location.href = `gestao.html?nome=${encodeURIComponent(data.nome)}&cargo=${encodeURIComponent(data.nome)}`;
+      return;
+    }
+
+    login.style.display = "none";
+    dash.style.display = "block";
+
+    nome.innerText = data.nome;
+    cargo.innerText = data.tipo.toUpperCase();
+
+    // Exibe os cards corretos
+    cardsMetas.style.display = "flex";
+
+    if (data.tipo === "analista") {
+      cardsAnalistas.style.display = "flex";
+      cardsAuxiliares.style.display = "none";
+
+      const result = calcularIndicadoresAnalista(data);
+      indicadoresMensagem.innerText = result.msg;
+      indicadoresMensagem.className = result.tipo === "ok" ? "ok-msg" : "warn-msg";
+    }
+
+    if (data.tipo === "auxiliar") {
+      cardsAnalistas.style.display = "none";
+      cardsAuxiliares.style.display = "flex";
+
+      const result = calcularIndicadoresAuxiliar(data);
+      indicadoresMensagem.innerText = result.msg;
+      indicadoresMensagem.className = result.tipo === "ok" ? "ok-msg" : "warn-msg";
+    }
+
+    // montar tabela
+    let html = "<table>";
+
+    for (let key in data) {
+      if (["tipo","nome","perfil"].includes(key)) continue;
+
+      html += `
+        <tr>
+          <th>${key}</th>
+          <td>${data[key]}</td>
+        </tr>
+      `;
+    }
+
+    html += "</table>";
+    dados.innerHTML = html;
   }
+
 
   function sair() {
-    document.getElementById('dash').style.display = 'none';
-    document.getElementById('login').style.display = 'block';
-    document.getElementById('usuario').value = '';
-    document.getElementById('senha').value = '';
+    dash.style.display = "none";
+    login.style.display = "block";
+    usuario.value = "";
+    senha.value = "";
   }
+
 </script>
 
 </body>
