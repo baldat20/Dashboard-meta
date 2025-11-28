@@ -24,7 +24,7 @@
       text-align: center;
     }
 
-    #dash { display:none; width: 720px; }
+    #dash { width: 800px; display:none; }
 
     #login input {
       padding: 10px;
@@ -35,6 +35,63 @@
       font-weight: bold;
     }
 
+    /* --------------------  
+         CARDS DE METAS
+       -------------------- */
+    #cardsMetas {
+      display: none;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .meta-card {
+      width: 230px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .sup-card { background: #c8f7c5; }
+    .def-card { background: #fff3b2; }
+    .tol-card { background: #ffe1b5; }
+
+    .meta-title {
+      font-size: 18px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    /* --------------------  
+        FEEDBACK
+       -------------------- */
+    #indicadoresMensagem {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .ok-msg { color:#28a745; }
+    .warn-msg { color:#ff8800; }
+
+    /* tabela simples abaixo */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #ccc;
+      text-align: center;
+    }
+    th { background: #eee; }
+
     button {
       padding: 10px 20px;
       background: #ffcc00;
@@ -42,9 +99,12 @@
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
+      margin-top: 10px;
     }
+
   </style>
 </head>
+
 <body>
 
   <div id="login">
@@ -56,68 +116,146 @@
   </div>
 
   <div id="dash">
-    <img id="metaImg" src="A_screenshot_of_a_web_application_interface_displa.png" alt="Metas (Auxiliar)" />
+
+    <!-- CARDS DE METAS -->
+    <div id="cardsMetas">
+
+      <div class="meta-card sup-card">
+        <div class="meta-title">SUPERAÇÃO</div>
+        <div>%: <strong>110%</strong></div>
+        <div>TMA: <strong>00:08:00</strong></div>
+        <div>TME: <strong>00:00:35</strong></div>
+        <div>Produtivo: <strong>06:20:00</strong></div>
+        <div>Abs: <strong>10%</strong></div>
+        <div>Atingimento: <strong>60%</strong></div>
+      </div>
+
+      <div class="meta-card def-card">
+        <div class="meta-title">DEFINIDA</div>
+        <div>%: <strong>100%</strong></div>
+        <div>TMA: <strong>00:08:40</strong></div>
+        <div>TME: <strong>00:00:45</strong></div>
+        <div>Produtivo: <strong>06:20:00</strong></div>
+        <div>Abs: <strong>10%</strong></div>
+        <div>Atingimento: <strong>40%</strong></div>
+      </div>
+
+      <div class="meta-card tol-card">
+        <div class="meta-title">TOLERÁVEL</div>
+        <div>%: <strong>50%</strong></div>
+        <div>TMA: <strong>00:09:30</strong></div>
+        <div>TME: <strong>00:01:00</strong></div>
+        <div>Produtivo: <strong>06:20:00</strong></div>
+        <div>Abs: <strong>10%</strong></div>
+        <div>Atingimento: <strong>20%</strong></div>
+      </div>
+
+    </div>
+
     <h2 id="nome"></h2>
     <h3 id="cargo"></h3>
+
+    <div id="indicadoresMensagem"></div>
+
     <div id="dados"></div>
+
     <button onclick="sair()">Sair</button>
+
   </div>
 
-  <script>
-    async function entrar() {
-      const u = document.getElementById('usuario').value;
-      const s = document.getElementById('senha').value;
-      document.getElementById('erro').innerText = '';
+<script>
 
-      try {
-        const params = new URLSearchParams({ usuario: u, senha: s });
-        const res = await fetch('/api/login?' + params.toString());
-        const data = await res.json();
+  function parseTime(str) {
+    if (!str) return 0;
+    const p = str.split(":").map(Number);
+    return p[0]*3600 + p[1]*60 + (p[2]||0);
+  }
 
-        if (data.erro || data.success === false) {
-          document.getElementById('erro').innerText = data.erro || data.message || 'Login inválido';
-          return;
-        }
+  function calcularIndicadores(data) {
 
-        // Se for gestão, redireciona para gestao.html
-        if (data.perfil === "gestao") {
-          // IMPORTANT: enviamos cargo = DATA.NOME para que a API /api/gestao reconheça a supervisora
-          window.location.href = `gestao.html?nome=${encodeURIComponent(data.nome)}&cargo=${encodeURIComponent(data.nome)}`;
-          return;
-        }
+    const TMA = parseTime(data.TMA);
+    const TME = parseTime(data.TME);
+    const PROD = parseTime(data.TempoProdutivo);
+    const ABS = parseFloat(data.PercentualABS.replace("%",""));
 
-        // Demais perfis -> mantém painel atual (analista/auxiliar)
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('dash').style.display = 'block';
+    const okTMA = TMA <= parseTime("00:08:00");
+    const okTME = TME <= parseTime("00:00:35");
+    const okProd = PROD >= parseTime("06:20:00");
+    const okAbs = ABS <= 10;
 
-        document.getElementById('nome').innerText = data.nome || '';
-        document.getElementById('cargo').innerText = (data.tipo || '').toUpperCase();
+    if (okTMA && okTME && okProd && okAbs) {
+      return { msg:"Manter desempenho", tipo:"ok" };
+    }
 
-        let html = '<table><tbody>';
-        for (let key in data) {
-          if (key === 'tipo' || key === 'nome') continue;
-          html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
-        }
-        html += '</tbody></table>';
-        document.getElementById('dados').innerHTML = html;
+    let ajustes = [];
+    if (TMA > parseTime("00:08:00")) ajustes.push("Ajustar TMA");
+    if (TME > parseTime("00:00:35")) ajustes.push("Ajustar TME");
+    if (PROD < parseTime("06:20:00")) ajustes.push("Aumentar tempo produtivo");
+    if (ABS > 10) ajustes.push("Melhorar frequência");
 
-        if ((data.tipo || '').toLowerCase() === 'auxiliar') 
-          document.getElementById('metaImg').style.display = 'block';
-        else 
-          document.getElementById('metaImg').style.display = 'none';
+    return { msg: ajustes.join(", "), tipo:"warn" };
+  }
 
-      } catch (e) {
-        document.getElementById('erro').innerText = 'Erro: ' + e.message;
+  async function entrar() {
+    const u = document.getElementById('usuario').value;
+    const s = document.getElementById('senha').value;
+    document.getElementById('erro').innerText = '';
+
+    try {
+      const params = new URLSearchParams({ usuario: u, senha: s });
+      const res = await fetch('/api/login?' + params.toString());
+      const data = await res.json();
+
+      if (data.erro || data.success === false) {
+        document.getElementById('erro').innerText = data.erro || 'Login inválido';
+        return;
       }
-    }
 
-    function sair() {
-      document.getElementById('dash').style.display = 'none';
-      document.getElementById('login').style.display = 'block';
-      document.getElementById('usuario').value = '';
-      document.getElementById('senha').value = '';
+      if (data.perfil === "gestao") {
+        window.location.href = `gestao.html?nome=${encodeURIComponent(data.nome)}&cargo=${encodeURIComponent(data.nome)}`;
+        return;
+      }
+
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('dash').style.display = 'block';
+
+      document.getElementById('nome').innerText = data.nome;
+      document.getElementById('cargo').innerText = data.tipo.toUpperCase();
+
+      /* ---------- MOSTRAR METAS + VALIDAR ---------- */
+      if (data.tipo === "analista") {
+
+        document.getElementById("cardsMetas").style.display = "flex";
+
+        const result = calcularIndicadores(data);
+        const msgBox = document.getElementById("indicadoresMensagem");
+
+        msgBox.innerText = result.msg;
+        msgBox.className = result.tipo === "ok" ? "ok-msg" : "warn-msg";
+      }
+
+      /* ---------- tabela de dados ---------- */
+      let html = '<table>';
+      for (let key in data) {
+        if (key === 'tipo' || key === 'nome') continue;
+        html += `<tr><th>${key}</th><td>${data[key]}</td></tr>`;
+      }
+      html += '</table>';
+
+      document.getElementById('dados').innerHTML = html;
+
+    } catch (e) {
+      document.getElementById('erro').innerText = 'Erro: ' + e.message;
     }
-  </script>
+  }
+
+  function sair() {
+    document.getElementById('dash').style.display = 'none';
+    document.getElementById('login').style.display = 'block';
+    document.getElementById('usuario').value = '';
+    document.getElementById('senha').value = '';
+  }
+</script>
 
 </body>
 </html>
