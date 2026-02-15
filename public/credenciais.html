@@ -167,16 +167,33 @@ async function carregar(){
 
   try{
 
-    const resp1 = await fetch(`/api/gestao?tipo=analistas&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
-    const data1 = await resp1.json();
-    const analistas = data1.analistas || [];
+    let todos=[];
 
-    const resp2 = await fetch(`/api/gestao?tipo=auxiliares&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
-    const data2 = await resp2.json();
-    const auxiliares = data2.auxiliares || [];
+    // SE FOR COORDENAÇÃO → BUSCA TODAS
+    if(cargo === "Leticia Caroline Da Silva"){
 
-    dadosGlobais=[...analistas,...auxiliares];
+      const resp = await fetch(`/api/gestao?cargo=${encodeURIComponent(cargo)}`);
+      const data = await resp.json();
 
+      Object.values(data.supervisores || {}).forEach(sup=>{
+        todos.push(...(sup.analistas || []));
+        todos.push(...(sup.auxiliares || []));
+      });
+
+    }else{
+      // SUPERVISORA NORMAL
+      const resp1 = await fetch(`/api/gestao?tipo=analistas&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
+      const data1 = await resp1.json();
+      const analistas = data1.analistas || [];
+
+      const resp2 = await fetch(`/api/gestao?tipo=auxiliares&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
+      const data2 = await resp2.json();
+      const auxiliares = data2.auxiliares || [];
+
+      todos=[...analistas,...auxiliares];
+    }
+
+    dadosGlobais = todos;
     render(dadosGlobais);
 
   }catch(e){
