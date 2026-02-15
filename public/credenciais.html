@@ -245,8 +245,14 @@ document.getElementById("busca").addEventListener("input",e=>{
   render(filtrado);
 });
 
+  function voltarPainel(){
+  window.location.href = `gestao.html?nome=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(cargo)}`;
+}
+
+
 carregar();
 </script>
 
 </body>
 </html>
+
