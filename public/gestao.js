@@ -42,14 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("supNome").innerText = nome;
 
-  // abas painel normal
   document.getElementById("tabAnal").onclick = () => selecionarAba("analistas");
   document.getElementById("tabAux").onclick = () => selecionarAba("auxiliares");
   document.getElementById("btnVoltarSup").onclick = voltarParaSupervisoras;
-
-  // botões topo
-  document.getElementById("btnPainel").onclick = irPainel;
-  document.getElementById("btnCredenciais").onclick = irCredenciais;
 
   if (isCoord()) {
     carregarResumoSupervisoras();
@@ -59,33 +54,6 @@ document.addEventListener("DOMContentLoaded", () => {
     selecionarAba("analistas");
   }
 });
-
-// =============================
-// TROCA DE PÁGINA
-// =============================
-function irPainel(){
-  document.getElementById("paginaCredenciais").style.display="none";
-  document.getElementById("menuCoord").style.display = isCoord() ? "flex" : "none";
-  document.getElementById("tabsRow").style.display="";
-  document.getElementById("cardArea").style.display="";
-  document.getElementById("btnVoltarSup").style.display = isCoord() ? "inline-block" : "none";
-
-  document.getElementById("btnPainel").classList.add("active");
-  document.getElementById("btnCredenciais").classList.remove("active");
-}
-
-function irCredenciais(){
-  document.getElementById("paginaCredenciais").style.display="block";
-  document.getElementById("menuCoord").style.display="none";
-  document.getElementById("tabsRow").style.display="none";
-  document.getElementById("cardArea").style.display="none";
-  document.getElementById("btnVoltarSup").style.display="none";
-
-  document.getElementById("btnCredenciais").classList.add("active");
-  document.getElementById("btnPainel").classList.remove("active");
-
-  carregarCredenciais();
-}
 
 // =============================
 // Buscar supervisoras via API
@@ -167,7 +135,7 @@ function selecionarAba(tipo) {
 }
 
 // =============================
-// Carregar relatório normal
+// Carregar relatório
 // =============================
 async function carregarRelatorio(tipo) {
   if (!supervisaoSelecionada) return;
@@ -218,71 +186,4 @@ function montarTabela(lista) {
   });
 
   document.getElementById("tabelaBody").innerHTML = html;
-}
-
-// =============================
-// CARREGAR CREDENCIAIS
-// =============================
-async function carregarCredenciais(){
-
-  const tbody = document.getElementById("credBody");
-  tbody.innerHTML = `<tr><td colspan="3">Carregando...</td></tr>`;
-
-  try{
-
-    // se for coordenação → busca todas supervisoras
-    if(isCoord()){
-
-      const resp = await fetch(`/api/gestao?cargo=${encodeURIComponent(cargo)}`);
-      const data = await resp.json();
-
-      let todos = [];
-
-      Object.values(data.supervisores || {}).forEach(sup=>{
-        todos.push(...(sup.analistas || []));
-        todos.push(...(sup.auxiliares || []));
-      });
-
-      renderCredenciais(todos);
-      return;
-    }
-
-    // se for supervisora → busca só dela
-    const resp1 = await fetch(`/api/gestao?tipo=analistas&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
-    const data1 = await resp1.json();
-    const analistas = data1.analistas || [];
-
-    const resp2 = await fetch(`/api/gestao?tipo=auxiliares&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
-    const data2 = await resp2.json();
-    const auxiliares = data2.auxiliares || [];
-
-    const todos = [...analistas, ...auxiliares];
-    renderCredenciais(todos);
-
-  }catch(e){
-    tbody.innerHTML=`<tr><td colspan="3">Erro: ${e.message}</td></tr>`;
-  }
-}
-
-function renderCredenciais(lista){
-
-  const tbody = document.getElementById("credBody");
-  tbody.innerHTML="";
-
-  if(!lista || lista.length===0){
-    tbody.innerHTML=`<tr><td colspan="3">Nenhum dado encontrado</td></tr>`;
-    return;
-  }
-
-  lista.forEach(p=>{
-    const tr=document.createElement("tr");
-
-    tr.innerHTML=`
-      <td class="col-name">${p.nome}</td>
-      <td>${p.login || "-"}</td>
-      <td>${p.senha || "-"}</td>
-    `;
-
-    tbody.appendChild(tr);
-  });
 }
