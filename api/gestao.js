@@ -91,15 +91,17 @@ module.exports = async (req, res) => {
     const analistasRows = analistasResp.data.values || [];
 
     const analistas = analistasRows.map(row => ({
-      usuario: row[0] || "",
-      nome: row[0] || "",
-      tma: row[4] || "",
-      tme: row[5] || "",
-      tempoProd: row[6] || "",
-      abs: row[7] || "",
-      nivel: row[14] || "",
-      supervisao: row[15] || ""
-    }));
+  nome: row[0] || "",
+  login: row[0] || "",   // coluna A
+  senha: row[2] || "",   // coluna C
+  tma: row[4] || "",
+  tme: row[5] || "",
+  tempoProd: row[6] || "",
+  abs: row[7] || "",
+  nivel: row[14] || "",
+  supervisao: row[15] || ""
+}));
+
 
     // ----------------------------------------
     // CARREGA AUXILIARES
@@ -112,15 +114,15 @@ module.exports = async (req, res) => {
     const auxiliaresRows = auxiliaresResp.data.values || [];
 
     const auxiliares = auxiliaresRows.map(row => ({
-      usuario: row[0] || "",
-      nome: row[0] || "",
-      eficiencia: row[2] || "",
-      vrep: row[3] || "",
-      abs: row[4] || "",
-      nivel: row[10] || "",
-      supervisao: row[11] || ""
-    }));
-
+  nome: row[0] || "",
+  login: row[0] || "",  // coluna A
+  senha: row[1] || "",  // coluna B
+  eficiencia: row[2] || "",
+  vrep: row[3] || "",
+  abs: row[4] || "",
+  nivel: row[10] || "",
+  supervisao: row[11] || ""
+}));
     // ----------------------------------------
     // FUNÇÕES DE FILTRO COM normalize()
     // ----------------------------------------
