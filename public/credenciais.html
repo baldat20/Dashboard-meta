@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Credenciais da Equipe</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:Montserrat;
+  background:linear-gradient(135deg,#428bfc,#b9e2ff);
+}
+
+header{
+  background:#000;
+  color:#fff;
+  padding:20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+h1{margin:0;}
+
+.container{
+  max-width:900px;
+  margin:40px auto;
+}
+
+.card{
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 8px 20px rgba(0,0,0,.15);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+thead{
+  background:#42a7f5;
+  color:#fff;
+  font-weight:700;
+}
+
+td,th{
+  padding:16px;
+  text-align:left;
+}
+
+tr:nth-child(even){
+  background:#f7fbff;
+}
+
+.copy{
+  background:#42a7f5;
+  border:none;
+  padding:6px 12px;
+  color:white;
+  border-radius:8px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Credenciais da Equipe</h1>
+  <div id="nomeSup"></div>
+</header>
+
+<div class="container">
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Login</th>
+          <th>Senha</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="lista"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+
+const nome = urlParams.get("nome");
+const cargo = urlParams.get("cargo");
+
+if(!nome || !cargo){
+  window.location.href="index.html";
+}
+
+document.getElementById("nomeSup").innerText = nome;
+
+async function carregar(){
+
+  const tbody=document.getElementById("lista");
+  tbody.innerHTML=`<tr><td colspan="4">Carregando...</td></tr>`;
+
+  try{
+
+    const resp1 = await fetch(`/api/gestao?tipo=analistas&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
+    const data1 = await resp1.json();
+    const analistas = data1.analistas || [];
+
+    const resp2 = await fetch(`/api/gestao?tipo=auxiliares&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
+    const data2 = await resp2.json();
+    const auxiliares = data2.auxiliares || [];
+
+    const todos=[...analistas,...auxiliares];
+
+    if(todos.length===0){
+      tbody.innerHTML=`<tr><td colspan="4">Nenhuma credencial encontrada</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML="";
+
+    todos.forEach(p=>{
+      const tr=document.createElement("tr");
+
+      tr.innerHTML=`
+        <td><strong>${p.nome}</strong></td>
+        <td>${p.login||"-"}</td>
+        <td>${p.senha||"-"}</td>
+        <td><button class="copy" onclick="copiar('${p.senha}')">Copiar</button></td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+
+  }catch(e){
+    tbody.innerHTML=`<tr><td colspan="4">Erro: ${e.message}</td></tr>`;
+  }
+}
+
+function copiar(texto){
+  navigator.clipboard.writeText(texto);
+  alert("Senha copiada");
+}
+
+carregar();
+</script>
+
+</body>
+</html>
