@@ -225,41 +225,56 @@ function montarTabela(lista) {
 // =============================
 async function carregarCredenciais(){
 
-  let analistas = [];
-  let auxiliares = [];
+  const tbody = document.getElementById("credBody");
+  tbody.innerHTML = `<tr><td colspan="3">Carregando...</td></tr>`;
 
-  if(isCoord()){
-    // coord vê todos
-    const resp = await fetch(`/api/gestao?cargo=${encodeURIComponent(cargo)}`);
-    const data = await resp.json();
+  try{
 
-    Object.values(data.supervisores || {}).forEach(sup=>{
-      analistas.push(...(sup.analistas || []));
-      auxiliares.push(...(sup.auxiliares || []));
-    });
+    // se for coordenação → busca todas supervisoras
+    if(isCoord()){
 
-  }else{
-    // supervisora vê só dela
-    const resp = await fetch(`/api/gestao?tipo=analistas&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
-    const data = await resp.json();
-    analistas = data.analistas || [];
+      const resp = await fetch(`/api/gestao?cargo=${encodeURIComponent(cargo)}`);
+      const data = await resp.json();
+
+      let todos = [];
+
+      Object.values(data.supervisores || {}).forEach(sup=>{
+        todos.push(...(sup.analistas || []));
+        todos.push(...(sup.auxiliares || []));
+      });
+
+      renderCredenciais(todos);
+      return;
+    }
+
+    // se for supervisora → busca só dela
+    const resp1 = await fetch(`/api/gestao?tipo=analistas&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
+    const data1 = await resp1.json();
+    const analistas = data1.analistas || [];
 
     const resp2 = await fetch(`/api/gestao?tipo=auxiliares&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
     const data2 = await resp2.json();
-    auxiliares = data2.auxiliares || [];
+    const auxiliares = data2.auxiliares || [];
+
+    const todos = [...analistas, ...auxiliares];
+    renderCredenciais(todos);
+
+  }catch(e){
+    tbody.innerHTML=`<tr><td colspan="3">Erro: ${e.message}</td></tr>`;
   }
+}
 
-  const todos=[...analistas,...auxiliares];
+function renderCredenciais(lista){
 
-  const tbody=document.getElementById("credBody");
+  const tbody = document.getElementById("credBody");
   tbody.innerHTML="";
 
-  if(todos.length===0){
-    tbody.innerHTML=`<tr><td colspan="3">Nenhuma credencial encontrada</td></tr>`;
+  if(!lista || lista.length===0){
+    tbody.innerHTML=`<tr><td colspan="3">Nenhum dado encontrado</td></tr>`;
     return;
   }
 
-  todos.forEach(p=>{
+  lista.forEach(p=>{
     const tr=document.createElement("tr");
 
     tr.innerHTML=`
