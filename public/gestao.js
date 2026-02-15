@@ -187,3 +187,7 @@ function montarTabela(lista) {
 
   document.getElementById("tabelaBody").innerHTML = html;
 }
+
+function abrirCredenciais(){
+  window.location.href = `credenciais.html?nome=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(cargo)}`;
+}
