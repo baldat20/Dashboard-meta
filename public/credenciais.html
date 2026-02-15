@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Credenciais da Equipe</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
@@ -17,24 +17,40 @@ body{
 header{
   background:#000;
   color:#fff;
-  padding:20px;
+  padding:20px 30px;
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
 
-h1{margin:0;}
+h1{margin:0}
 
 .container{
-  max-width:900px;
-  margin:40px auto;
+  max-width:1100px;
+  margin:30px auto;
 }
 
 .card{
   background:#fff;
-  border-radius:12px;
+  border-radius:14px;
   overflow:hidden;
-  box-shadow:0 8px 20px rgba(0,0,0,.15);
+  box-shadow:0 10px 25px rgba(0,0,0,.2);
+}
+
+.top-actions{
+  padding:16px;
+  background:#f4f8ff;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.search{
+  padding:10px 14px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  width:260px;
+  font-size:14px;
 }
 
 table{
@@ -44,16 +60,15 @@ table{
 
 thead{
   background:#42a7f5;
-  color:#fff;
-  font-weight:700;
+  color:white;
 }
 
-td,th{
+th,td{
   padding:16px;
   text-align:left;
 }
 
-tr:nth-child(even){
+tbody tr:nth-child(even){
   background:#f7fbff;
 }
 
@@ -64,6 +79,17 @@ tr:nth-child(even){
   color:white;
   border-radius:8px;
   cursor:pointer;
+  font-weight:700;
+}
+
+.show{
+  background:#222;
+  border:none;
+  padding:6px 12px;
+  color:white;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:700;
 }
 </style>
 </head>
@@ -77,6 +103,12 @@ tr:nth-child(even){
 
 <div class="container">
   <div class="card">
+
+    <div class="top-actions">
+      <strong>Lista de acessos</strong>
+      <input class="search" id="busca" placeholder="Buscar por nome...">
+    </div>
+
     <table>
       <thead>
         <tr>
@@ -88,12 +120,15 @@ tr:nth-child(even){
       </thead>
       <tbody id="lista"></tbody>
     </table>
+
   </div>
 </div>
 
 <script>
+// =============================
+// PARAMETROS
+// =============================
 const urlParams = new URLSearchParams(window.location.search);
-
 const nome = urlParams.get("nome");
 const cargo = urlParams.get("cargo");
 
@@ -102,6 +137,11 @@ if(!nome || !cargo){
 }
 
 document.getElementById("nomeSup").innerText = nome;
+
+// =============================
+// BUSCAR DADOS API
+// =============================
+let dadosGlobais=[];
 
 async function carregar(){
 
@@ -118,37 +158,75 @@ async function carregar(){
     const data2 = await resp2.json();
     const auxiliares = data2.auxiliares || [];
 
-    const todos=[...analistas,...auxiliares];
+    dadosGlobais=[...analistas,...auxiliares];
 
-    if(todos.length===0){
-      tbody.innerHTML=`<tr><td colspan="4">Nenhuma credencial encontrada</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML="";
-
-    todos.forEach(p=>{
-      const tr=document.createElement("tr");
-
-      tr.innerHTML=`
-        <td><strong>${p.nome}</strong></td>
-        <td>${p.login||"-"}</td>
-        <td>${p.senha||"-"}</td>
-        <td><button class="copy" onclick="copiar('${p.senha}')">Copiar</button></td>
-      `;
-
-      tbody.appendChild(tr);
-    });
+    render(dadosGlobais);
 
   }catch(e){
-    tbody.innerHTML=`<tr><td colspan="4">Erro: ${e.message}</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="4">Erro ao carregar</td></tr>`;
   }
 }
 
-function copiar(texto){
-  navigator.clipboard.writeText(texto);
-  alert("Senha copiada");
+// =============================
+// RENDER TABELA
+// =============================
+function render(lista){
+
+  const tbody=document.getElementById("lista");
+  tbody.innerHTML="";
+
+  if(lista.length===0){
+    tbody.innerHTML=`<tr><td colspan="4">Nenhum encontrado</td></tr>`;
+    return;
+  }
+
+  lista.forEach((p,i)=>{
+
+    const tr=document.createElement("tr");
+
+    tr.innerHTML=`
+      <td><strong>${p.nome}</strong></td>
+      <td>${p.login||"-"}</td>
+      <td id="senha${i}">••••••</td>
+      <td>
+        <button class="show" onclick="toggleSenha(${i},'${p.senha}')">👁</button>
+        <button class="copy" onclick="copiar('${p.senha}')">Copiar</button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
 }
+
+// =============================
+// MOSTRAR/OCULTAR SENHA
+// =============================
+function toggleSenha(i,senha){
+  const el=document.getElementById("senha"+i);
+
+  if(el.innerText==="••••••"){
+    el.innerText=senha||"-";
+  }else{
+    el.innerText="••••••";
+  }
+}
+
+// =============================
+// COPIAR
+// =============================
+function copiar(txt){
+  navigator.clipboard.writeText(txt||"");
+  alert("Senha copiada!");
+}
+
+// =============================
+// BUSCA
+// =============================
+document.getElementById("busca").addEventListener("input",e=>{
+  const termo=e.target.value.toLowerCase();
+  const filtrado=dadosGlobais.filter(p=>p.nome.toLowerCase().includes(termo));
+  render(filtrado);
+});
 
 carregar();
 </script>
