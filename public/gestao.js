@@ -39,11 +39,17 @@ function isCoord() {
 // Inicialização
 // =============================
 document.addEventListener("DOMContentLoaded", () => {
+
   document.getElementById("supNome").innerText = nome;
 
+  // abas painel normal
   document.getElementById("tabAnal").onclick = () => selecionarAba("analistas");
   document.getElementById("tabAux").onclick = () => selecionarAba("auxiliares");
   document.getElementById("btnVoltarSup").onclick = voltarParaSupervisoras;
+
+  // botões topo
+  document.getElementById("btnPainel").onclick = irPainel;
+  document.getElementById("btnCredenciais").onclick = irCredenciais;
 
   if (isCoord()) {
     carregarResumoSupervisoras();
@@ -55,7 +61,34 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =============================
-// Buscar supervisoras + quantidade via API
+// TROCA DE PÁGINA
+// =============================
+function irPainel(){
+  document.getElementById("paginaCredenciais").style.display="none";
+  document.getElementById("menuCoord").style.display = isCoord() ? "flex" : "none";
+  document.getElementById("tabsRow").style.display="";
+  document.getElementById("cardArea").style.display="";
+  document.getElementById("btnVoltarSup").style.display = isCoord() ? "inline-block" : "none";
+
+  document.getElementById("btnPainel").classList.add("active");
+  document.getElementById("btnCredenciais").classList.remove("active");
+}
+
+function irCredenciais(){
+  document.getElementById("paginaCredenciais").style.display="block";
+  document.getElementById("menuCoord").style.display="none";
+  document.getElementById("tabsRow").style.display="none";
+  document.getElementById("cardArea").style.display="none";
+  document.getElementById("btnVoltarSup").style.display="none";
+
+  document.getElementById("btnCredenciais").classList.add("active");
+  document.getElementById("btnPainel").classList.remove("active");
+
+  carregarCredenciais();
+}
+
+// =============================
+// Buscar supervisoras via API
 // =============================
 async function carregarResumoSupervisoras() {
   const url = `/api/gestao?cargo=${encodeURIComponent(cargo)}`;
@@ -63,7 +96,6 @@ async function carregarResumoSupervisoras() {
   try {
     const resp = await fetch(url);
     const dados = await resp.json();
-
     montarMenuSupervisoras(dados.supervisores || {});
   } catch (e) {
     console.error("Erro ao carregar resumo:", e);
@@ -71,7 +103,7 @@ async function carregarResumoSupervisoras() {
 }
 
 // =============================
-// Coordenação — Lista supervisoras
+// Lista supervisoras
 // =============================
 function montarMenuSupervisoras(supervisoresAPI) {
   const div = document.getElementById("menuCoord");
@@ -135,7 +167,7 @@ function selecionarAba(tipo) {
 }
 
 // =============================
-// Carregar API
+// Carregar relatório normal
 // =============================
 async function carregarRelatorio(tipo) {
   if (!supervisaoSelecionada) return;
@@ -150,9 +182,7 @@ async function carregarRelatorio(tipo) {
   try {
     const resp = await fetch(url);
     const dados = await resp.json();
-
     const lista = tipo === "analistas" ? dados.analistas : dados.auxiliares;
-
     montarTabela(lista);
   } catch (e) {
     document.getElementById("tabelaBody").innerHTML = `
@@ -188,4 +218,56 @@ function montarTabela(lista) {
   });
 
   document.getElementById("tabelaBody").innerHTML = html;
+}
+
+// =============================
+// CARREGAR CREDENCIAIS
+// =============================
+async function carregarCredenciais(){
+
+  let analistas = [];
+  let auxiliares = [];
+
+  if(isCoord()){
+    // coord vê todos
+    const resp = await fetch(`/api/gestao?cargo=${encodeURIComponent(cargo)}`);
+    const data = await resp.json();
+
+    Object.values(data.supervisores || {}).forEach(sup=>{
+      analistas.push(...(sup.analistas || []));
+      auxiliares.push(...(sup.auxiliares || []));
+    });
+
+  }else{
+    // supervisora vê só dela
+    const resp = await fetch(`/api/gestao?tipo=analistas&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
+    const data = await resp.json();
+    analistas = data.analistas || [];
+
+    const resp2 = await fetch(`/api/gestao?tipo=auxiliares&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
+    const data2 = await resp2.json();
+    auxiliares = data2.auxiliares || [];
+  }
+
+  const todos=[...analistas,...auxiliares];
+
+  const tbody=document.getElementById("credBody");
+  tbody.innerHTML="";
+
+  if(todos.length===0){
+    tbody.innerHTML=`<tr><td colspan="3">Nenhuma credencial encontrada</td></tr>`;
+    return;
+  }
+
+  todos.forEach(p=>{
+    const tr=document.createElement("tr");
+
+    tr.innerHTML=`
+      <td class="col-name">${p.nome}</td>
+      <td>${p.login || "-"}</td>
+      <td>${p.senha || "-"}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
 }
