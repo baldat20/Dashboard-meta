@@ -40,26 +40,6 @@ header.topbar h1{
   font-weight:800;
 }
 
-.page-switch{
-  display:flex;
-  gap:10px;
-}
-
-.page-switch button{
-  background:#1c1c1c;
-  color:#fff;
-  border:1px solid #555;
-  padding:8px 18px;
-  border-radius:20px;
-  font-weight:700;
-  cursor:pointer;
-}
-
-.page-switch button.active{
-  background:#42a7f5;
-  border:none;
-}
-
 .subbar{
   height:8px;
   background:var(--blue);
@@ -200,34 +180,12 @@ tbody td{
 
 <header class="topbar">
   <h1>Painel de Gestão</h1>
-
-  <div class="page-switch">
-    <button id="btnPainel" class="active">Painel</button>
-    <button id="btnCredenciais">Credenciais</button>
-  </div>
-
   <div class="sup-name" id="supNome">—</div>
 </header>
 
 <div class="subbar"></div>
 
 <div class="container">
-
-  <!-- PAGINA CREDENCIAIS -->
-  <div id="paginaCredenciais" style="display:none">
-    <div class="card" style="display:block">
-      <table>
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Login</th>
-            <th>Senha</th>
-          </tr>
-        </thead>
-        <tbody id="credBody"></tbody>
-      </table>
-    </div>
-  </div>
 
   <!-- LISTA SUP -->
   <div id="menuCoord"></div>
@@ -260,63 +218,5 @@ tbody td{
 <button class="floating-sair" onclick="window.location.href='index.html'">SAIR</button>
 
 <script src="gestao.js"></script>
-
-<script>
-const btnPainel = document.getElementById("btnPainel");
-const btnCredenciais = document.getElementById("btnCredenciais");
-
-const paginaCredenciais = document.getElementById("paginaCredenciais");
-const menuCoord = document.getElementById("menuCoord");
-const tabsRow = document.getElementById("tabsRow");
-const cardArea = document.getElementById("cardArea");
-const btnVoltarSup = document.getElementById("btnVoltarSup");
-
-btnPainel.onclick = () =>{
-  paginaCredenciais.style.display="none";
-  menuCoord.style.display="";
-  tabsRow.style.display="";
-  cardArea.style.display="";
-  btnVoltarSup.style.display="";
-  btnPainel.classList.add("active");
-  btnCredenciais.classList.remove("active");
-};
-
-btnCredenciais.onclick = () =>{
-  paginaCredenciais.style.display="block";
-  menuCoord.style.display="none";
-  tabsRow.style.display="none";
-  cardArea.style.display="none";
-  btnVoltarSup.style.display="none";
-  btnCredenciais.classList.add("active");
-  btnPainel.classList.remove("active");
-  carregarCredenciais();
-};
-
-async function carregarCredenciais(){
-  const resp = await fetch("/api/gestao?tipo=analistas");
-  const data = await resp.json();
-  const analistas = data.analistas || [];
-
-  const resp2 = await fetch("/api/gestao?tipo=auxiliares");
-  const data2 = await resp2.json();
-  const auxiliares = data2.auxiliares || [];
-
-  const todos=[...analistas,...auxiliares];
-
-  const tbody=document.getElementById("credBody");
-  tbody.innerHTML="";
-
-  todos.forEach(p=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td class="col-name">${p.nome}</td>
-      <td>${p.login}</td>
-      <td>${p.senha}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-</script>
-
 </body>
 </html>
