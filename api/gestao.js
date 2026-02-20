@@ -44,7 +44,7 @@ async function acessarPlanilha() {
         process.env.GOOGLE_PRIVATE_KEY &&
         process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
     },
-   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
   return google.sheets({ version: "v4", auth });
@@ -52,10 +52,12 @@ async function acessarPlanilha() {
 
 // ----------------------------------------
 module.exports = async (req, res) => {
-  // ALTERAR SENHA
-if (req.method === "POST" && req.body.acao === "trocarSenha") {
-  return alterarSenha(req, res);
-}
+
+  // 🔐 TROCAR SENHA (ANTES DO RESTO)
+  if (req.method === "POST" && req.body?.acao === "trocarSenha") {
+    return alterarSenha(req, res);
+  }
+
   try {
     const query = req.method === "GET" ? req.query : req.body;
 
@@ -66,9 +68,7 @@ if (req.method === "POST" && req.body.acao === "trocarSenha") {
     const sheets = await acessarPlanilha();
     const sheetId = process.env.SHEET_ID;
 
-    // ----------------------------------------
-    // ANALISTAS
-    // ----------------------------------------
+    // ---------------- ANALISTAS
     const analistasResp = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
       range: "Relatorio Analistas!A2:P",
@@ -88,17 +88,15 @@ if (req.method === "POST" && req.body.acao === "trocarSenha") {
       supervisao: row[15] || ""
     }));
 
-    // ----------------------------------------
-    // AUXILIARES
-    // ----------------------------------------
-    const auxiliaresResp = await sheets.spreadsheets.values.get({
+    // ---------------- AUX
+    const auxResp = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
       range: "Relatorio Auxiliares!A2:L",
     });
 
-    const auxiliaresRows = auxiliaresResp.data.values || [];
+    const auxRows = auxResp.data.values || [];
 
-    const auxiliares = auxiliaresRows.map(row => ({
+    const auxiliares = auxRows.map(row => ({
       nome: row[0] || "",
       login: row[0] || "",
       senha: row[1] || "",
@@ -109,9 +107,7 @@ if (req.method === "POST" && req.body.acao === "trocarSenha") {
       supervisao: row[11] || ""
     }));
 
-    // ----------------------------------------
-    // FILTROS (AGORA COM LOGIN E SENHA)
-    // ----------------------------------------
+    // ---------------- FILTROS
     function filtrarAnalistasPor(supervisorNome) {
       const target = normalize(supervisorNome);
 
@@ -149,9 +145,7 @@ if (req.method === "POST" && req.body.acao === "trocarSenha") {
 
     const isCoord = cargo === "Leticia Caroline Da Silva";
 
-    // ----------------------------------------
-    // COORD → TODAS
-    // ----------------------------------------
+    // ---------------- COORD TODAS
     if (isCoord && !supervisao) {
       const resultado = {};
       for (const sup of SUPERVISORES_LIST) {
@@ -165,9 +159,7 @@ if (req.method === "POST" && req.body.acao === "trocarSenha") {
 
     const targetSupervisao = supervisao || cargo;
 
-    // ----------------------------------------
-    // COORD → UMA SUP
-    // ----------------------------------------
+    // ---------------- COORD UMA
     if (isCoord && SUPERVISORES_LIST.includes(targetSupervisao)) {
       const respObj = {
         supervisao: targetSupervisao,
@@ -181,9 +173,7 @@ if (req.method === "POST" && req.body.acao === "trocarSenha") {
       return res.json(respObj);
     }
 
-    // ----------------------------------------
-    // SUPERVISORA
-    // ----------------------------------------
+    // ---------------- SUPERVISORA
     if (!isCoord && SUPERVISORES_LIST.includes(cargo)) {
       const respObj = {
         supervisao: cargo,
@@ -200,116 +190,93 @@ if (req.method === "POST" && req.body.acao === "trocarSenha") {
     return res.status(403).json({ erro: "Acesso não autorizado." });
 
   } catch (e) {
-    console.error("Erro API /api/gestao:", e);
+    console.error("Erro API:", e);
     return res.status(500).json({ erro: e.message });
   }
 };
+
+// ----------------------------------------
+// 🔐 ALTERAR SENHA
+// ----------------------------------------
 async function alterarSenha(req, res){
-  try{
+try{
 
-    const { usuario, novaSenha, solicitante } = req.body;
+const {usuario,novaSenha,solicitante}=req.body;
 
-    if(!usuario || !novaSenha){
-      return res.status(400).json({erro:"Dados inválidos"});
-    }
+if(!usuario || !novaSenha){
+ return res.status(400).json({erro:"Dados inválidos"});
+}
 
-    const sheets = await acessarPlanilha();
-    const sheetId = process.env.SHEET_ID;
+const sheets = await acessarPlanilha();
+const sheetId = process.env.SHEET_ID;
 
-    const isCoord = solicitante === "Leticia Caroline Da Silva";
+const isCoord = solicitante==="Leticia Caroline Da Silva";
 
-    // ------------------ ANALISTAS
-    const analistasResp = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: "Relatorio Analistas!A2:P",
-    });
+// ===== ANALISTAS
+const analistasResp = await sheets.spreadsheets.values.get({
+ spreadsheetId:sheetId,
+ range:"Relatorio Analistas!A2:P"
+});
 
-    const analistas = analistasResp.data.values || [];
+const analistas = analistasResp.data.values||[];
 
-    for(let i=0;i<analistas.length;i++){
+for(let i=0;i<analistas.length;i++){
 
-      const nomeAnalista = analistas[i][0];
-      const supAnalista = analistas[i][15];
+ const nomeUser = analistas[i][0];
+ const sup = analistas[i][15];
 
-      if(nomeAnalista === usuario){
+ if(nomeUser===usuario){
 
-        // coord pode tudo
-        if(isCoord){
+   if(isCoord || solicitante===sup || solicitante===usuario){
 
-          await sheets.spreadsheets.values.update({
-            spreadsheetId: sheetId,
-            range:`Relatorio Analistas!C${i+2}`,
-            valueInputOption:"RAW",
-            requestBody:{ values:[[novaSenha]] }
-          });
+     await sheets.spreadsheets.values.update({
+       spreadsheetId:sheetId,
+       range:`Relatorio Analistas!C${i+2}`,
+       valueInputOption:"RAW",
+       requestBody:{values:[[novaSenha]]}
+     });
 
-          return res.json({ok:true});
-        }
+     return res.json({ok:true});
+   }
 
-        // supervisora só da equipe
-        if(solicitante === supAnalista){
+   return res.status(403).json({erro:"Sem permissão"});
+ }
+}
 
-          await sheets.spreadsheets.values.update({
-            spreadsheetId: sheetId,
-            range:`Relatorio Analistas!C${i+2}`,
-            valueInputOption:"RAW",
-            requestBody:{ values:[[novaSenha]] }
-          });
+// ===== AUX
+const auxResp = await sheets.spreadsheets.values.get({
+ spreadsheetId:sheetId,
+ range:"Relatorio Auxiliares!A2:L"
+});
 
-          return res.json({ok:true});
-        }
+const aux = auxResp.data.values||[];
 
-        // próprio usuário
-        if(solicitante === usuario){
+for(let i=0;i<aux.length;i++){
 
-          await sheets.spreadsheets.values.update({
-            spreadsheetId: sheetId,
-            range:`Relatorio Analistas!C${i+2}`,
-            valueInputOption:"RAW",
-            requestBody:{ values:[[novaSenha]] }
-          });
+ const nomeUser = aux[i][0];
+ const sup = aux[i][11];
 
-          return res.json({ok:true});
-        }
+ if(nomeUser===usuario){
 
-        return res.status(403).json({erro:"Sem permissão"});
-      }
-    }
+   if(isCoord || solicitante===sup || solicitante===usuario){
 
-    // ------------------ AUXILIARES
-    const auxResp = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: "Relatorio Auxiliares!A2:L",
-    });
+     await sheets.spreadsheets.values.update({
+       spreadsheetId:sheetId,
+       range:`Relatorio Auxiliares!B${i+2}`,
+       valueInputOption:"RAW",
+       requestBody:{values:[[novaSenha]]}
+     });
 
-    const aux = auxResp.data.values || [];
+     return res.json({ok:true});
+   }
 
-    for(let i=0;i<aux.length;i++){
+   return res.status(403).json({erro:"Sem permissão"});
+ }
+}
 
-      const nomeAux = aux[i][0];
-      const supAux = aux[i][11];
+return res.status(404).json({erro:"Usuário não encontrado"});
 
-      if(nomeAux === usuario){
-
-        if(isCoord || solicitante === supAux || solicitante === usuario){
-
-          await sheets.spreadsheets.values.update({
-            spreadsheetId: sheetId,
-            range:`Relatorio Auxiliares!B${i+2}`,
-            valueInputOption:"RAW",
-            requestBody:{ values:[[novaSenha]] }
-          });
-
-          return res.json({ok:true});
-        }
-
-        return res.status(403).json({erro:"Sem permissão"});
-      }
-    }
-
-    return res.status(404).json({erro:"Usuário não encontrado"});
-
-  }catch(e){
-    return res.status(500).json({erro:e.message});
-  }
+}catch(e){
+return res.status(500).json({erro:e.message});
+}
 }
