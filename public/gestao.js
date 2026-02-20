@@ -191,28 +191,32 @@ function montarTabela(lista) {
 function abrirCredenciais(){
   window.location.href = `credenciais.html?nome=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(cargo)}`;
 }
+function abrirCredenciais(){
+ window.location.href = `credenciais.html?nome=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(cargo)}`;
+}
+
 function trocarMinhaSenha(){
 
-  const nova = prompt("Digite a nova senha:");
-  if(!nova) return;
+ const nova = prompt("Digite sua nova senha:");
+ if(!nova) return;
 
-  fetch("/api/gestao",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      acao:"trocarSenha",
-      usuario:nome,
-      solicitante:nome,
-      novaSenha:nova
-    })
+ fetch("/api/gestao",{
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
+  body:JSON.stringify({
+    acao:"trocarSenha",
+    usuario:nome,
+    solicitante:nome,
+    novaSenha:nova
   })
-  .then(r=>r.json())
-  .then(d=>{
-    if(d.ok){
-      alert("Senha alterada com sucesso");
-    }else{
-      alert(d.erro);
-    }
-  });
+ })
+ .then(r=>r.json())
+ .then(d=>{
+   if(d.ok){
+     alert("Senha alterada com sucesso");
+   }else{
+     alert(d.erro);
+   }
+ });
 }
 
