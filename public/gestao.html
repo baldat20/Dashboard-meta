@@ -40,6 +40,27 @@ header.topbar h1{
   font-weight:800;
 }
 
+/* botoes topo */
+.top-actions{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.btn{
+  background:#42a7f5;
+  border:none;
+  color:white;
+  padding:10px 16px;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-dark{
+  background:#1f1f1f;
+}
+
 .subbar{
   height:8px;
   background:var(--blue);
@@ -179,32 +200,21 @@ tbody td{
 <body>
 
 <header class="topbar">
+
   <h1>Painel de Gestão</h1>
 
+  <div class="top-actions">
+    <button class="btn btn-dark" onclick="trocarMinhaSenha()">Alterar minha senha</button>
+    <button class="btn" onclick="abrirCredenciais()">Credenciais</button>
+    <div id="supNome"></div>
+  </div>
 
-  <button onclick="trocarMinhaSenha()">Alterar Senha</button>
-
-  <!-- BOTÃO CREDENCIAIS -->
-  <button onclick="abrirCredenciais()" style="
-    background:#42a7f5;
-    border:none;
-    color:white;
-    padding:10px 18px;
-    border-radius:8px;
-    font-weight:700;
-    cursor:pointer;
-  ">
-    Credenciais
-  </button>
-
-  <div class="sup-name" id="supNome">—</div>
 </header>
 
 <div class="subbar"></div>
 
 <div class="container">
 
-  <!-- LISTA SUP -->
   <div id="menuCoord"></div>
 
   <button id="btnVoltarSup">⬅ Voltar para supervisoras</button>
