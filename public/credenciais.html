@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -91,7 +92,18 @@ tbody tr:nth-child(even){
   cursor:pointer;
   font-weight:700;
 }
+
+.trocar{
+  background:#ff9800;
+  border:none;
+  padding:6px 12px;
+  color:white;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:700;
+}
 </style>
+
 </head>
 
 <body>
@@ -100,20 +112,32 @@ tbody tr:nth-child(even){
   <h1>Credenciais da Equipe</h1>
 
   <div style="display:flex; gap:10px; align-items:center;">
-    
-    <button onclick="voltarPainel()" style="
-      background:#42a7f5;
-      border:none;
-      color:white;
-      padding:10px 18px;
-      border-radius:8px;
-      font-weight:700;
-      cursor:pointer;
-    ">
-      ← Voltar ao Painel
-    </button>
 
-    <div id="nomeSup"></div>
+```
+<button onclick="voltarPainel()" style="
+  background:#42a7f5;
+  border:none;
+  color:white;
+  padding:10px 18px;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;">
+  ← Voltar ao Painel
+</button>
+
+<button onclick="trocarMinhaSenha()" style="
+  background:#ff9800;
+  border:none;
+  color:white;
+  padding:10px 18px;
+  border-radius:8px;
+  font-weight:700;
+  cursor:pointer;">
+  Alterar minha senha
+</button>
+
+<div id="nomeSup"></div>
+```
 
   </div>
 </header>
@@ -121,29 +145,29 @@ tbody tr:nth-child(even){
 <div class="container">
   <div class="card">
 
-    <div class="top-actions">
-      <strong>Lista de acessos</strong>
-      <input class="search" id="busca" placeholder="Buscar por nome...">
-    </div>
+```
+<div class="top-actions">
+  <strong>Lista de acessos</strong>
+  <input class="search" id="busca" placeholder="Buscar por nome...">
+</div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Login</th>
-          <th>Senha</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="lista"></tbody>
-    </table>
+<table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Login</th>
+      <th>Senha</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody id="lista"></tbody>
+</table>
+```
 
   </div>
 </div>
 
 <script>
-// =============================
-// PARAMETROS
 // =============================
 const urlParams = new URLSearchParams(window.location.search);
 const nome = urlParams.get("nome");
@@ -155,11 +179,11 @@ if(!nome || !cargo){
 
 document.getElementById("nomeSup").innerText = nome;
 
-// =============================
-// BUSCAR DADOS API
-// =============================
 let dadosGlobais=[];
 
+// =============================
+// CARREGAR
+// =============================
 async function carregar(){
 
   const tbody=document.getElementById("lista");
@@ -169,7 +193,7 @@ async function carregar(){
 
     let todos=[];
 
-    // SE FOR COORDENAÇÃO → BUSCA TODAS
+    // COORD
     if(cargo === "Leticia Caroline Da Silva"){
 
       const resp = await fetch(`/api/gestao?cargo=${encodeURIComponent(cargo)}`);
@@ -181,7 +205,7 @@ async function carregar(){
       });
 
     }else{
-      // SUPERVISORA NORMAL
+
       const resp1 = await fetch(`/api/gestao?tipo=analistas&supervisao=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(nome)}`);
       const data1 = await resp1.json();
       const analistas = data1.analistas || [];
@@ -202,8 +226,6 @@ async function carregar(){
 }
 
 // =============================
-// RENDER TABELA
-// =============================
 function render(lista){
 
   const tbody=document.getElementById("lista");
@@ -222,9 +244,10 @@ function render(lista){
       <td><strong>${p.nome}</strong></td>
       <td>${p.login||"-"}</td>
       <td id="senha${i}">••••••</td>
-      <td>
+      <td style="display:flex; gap:6px;">
         <button class="show" onclick="toggleSenha(${i},'${p.senha}')">👁</button>
-        <button class="copy" onclick="copiar('${p.senha}')">Copiar</button>
+        <button class="copy" onclick="copiar('${p.senha}')">📋</button>
+        <button class="trocar" onclick="trocarSenha('${p.nome}')">🔑</button>
       </td>
     `;
 
@@ -233,11 +256,8 @@ function render(lista){
 }
 
 // =============================
-// MOSTRAR/OCULTAR SENHA
-// =============================
 function toggleSenha(i,senha){
   const el=document.getElementById("senha"+i);
-
   if(el.innerText==="••••••"){
     el.innerText=senha||"-";
   }else{
@@ -245,16 +265,68 @@ function toggleSenha(i,senha){
   }
 }
 
-// =============================
-// COPIAR
-// =============================
 function copiar(txt){
   navigator.clipboard.writeText(txt||"");
   alert("Senha copiada!");
 }
 
 // =============================
-// BUSCA
+// TROCAR SENHA COLABORADOR
+// =============================
+async function trocarSenha(usuario){
+
+  const nova = prompt("Nova senha para "+usuario);
+  if(!nova) return;
+
+  const resp = await fetch("/api/gestao",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      acao:"trocarSenha",
+      usuario:usuario,
+      solicitante:nome,
+      novaSenha:nova
+    })
+  });
+
+  const data = await resp.json();
+
+  if(data.ok){
+    alert("Senha alterada!");
+    carregar();
+  }else{
+    alert(data.erro);
+  }
+}
+
+// =============================
+// MINHA SENHA
+// =============================
+async function trocarMinhaSenha(){
+
+  const nova = prompt("Digite sua nova senha");
+  if(!nova) return;
+
+  const resp = await fetch("/api/gestao",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      acao:"trocarSenha",
+      usuario:nome,
+      solicitante:nome,
+      novaSenha:nova
+    })
+  });
+
+  const data = await resp.json();
+
+  if(data.ok){
+    alert("Senha alterada com sucesso");
+  }else{
+    alert(data.erro);
+  }
+}
+
 // =============================
 document.getElementById("busca").addEventListener("input",e=>{
   const termo=e.target.value.toLowerCase();
@@ -262,14 +334,12 @@ document.getElementById("busca").addEventListener("input",e=>{
   render(filtrado);
 });
 
-  function voltarPainel(){
+function voltarPainel(){
   window.location.href = `gestao.html?nome=${encodeURIComponent(nome)}&cargo=${encodeURIComponent(cargo)}`;
 }
-
 
 carregar();
 </script>
 
 </body>
 </html>
-
