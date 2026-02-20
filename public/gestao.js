@@ -202,6 +202,7 @@ function trocarMinhaSenha(){
     body:JSON.stringify({
       acao:"trocarSenha",
       usuario:nome,
+      solicitante:nome,
       novaSenha:nova
     })
   })
@@ -214,3 +215,4 @@ function trocarMinhaSenha(){
     }
   });
 }
+
