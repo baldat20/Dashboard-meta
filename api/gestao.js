@@ -44,7 +44,7 @@ async function acessarPlanilha() {
         process.env.GOOGLE_PRIVATE_KEY &&
         process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
     },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
   return google.sheets({ version: "v4", auth });
