@@ -52,6 +52,10 @@ async function acessarPlanilha() {
 
 // ----------------------------------------
 module.exports = async (req, res) => {
+  // ALTERAR SENHA
+if (req.method === "POST" && req.body.acao === "trocarSenha") {
+  return alterarSenha(req, res);
+}
   try {
     const query = req.method === "GET" ? req.query : req.body;
 
@@ -200,3 +204,112 @@ module.exports = async (req, res) => {
     return res.status(500).json({ erro: e.message });
   }
 };
+async function alterarSenha(req, res){
+  try{
+
+    const { usuario, novaSenha, solicitante } = req.body;
+
+    if(!usuario || !novaSenha){
+      return res.status(400).json({erro:"Dados inválidos"});
+    }
+
+    const sheets = await acessarPlanilha();
+    const sheetId = process.env.SHEET_ID;
+
+    const isCoord = solicitante === "Leticia Caroline Da Silva";
+
+    // ------------------ ANALISTAS
+    const analistasResp = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: "Relatorio Analistas!A2:P",
+    });
+
+    const analistas = analistasResp.data.values || [];
+
+    for(let i=0;i<analistas.length;i++){
+
+      const nomeAnalista = analistas[i][0];
+      const supAnalista = analistas[i][15];
+
+      if(nomeAnalista === usuario){
+
+        // coord pode tudo
+        if(isCoord){
+
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: sheetId,
+            range:`Relatorio Analistas!C${i+2}`,
+            valueInputOption:"RAW",
+            requestBody:{ values:[[novaSenha]] }
+          });
+
+          return res.json({ok:true});
+        }
+
+        // supervisora só da equipe
+        if(solicitante === supAnalista){
+
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: sheetId,
+            range:`Relatorio Analistas!C${i+2}`,
+            valueInputOption:"RAW",
+            requestBody:{ values:[[novaSenha]] }
+          });
+
+          return res.json({ok:true});
+        }
+
+        // próprio usuário
+        if(solicitante === usuario){
+
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: sheetId,
+            range:`Relatorio Analistas!C${i+2}`,
+            valueInputOption:"RAW",
+            requestBody:{ values:[[novaSenha]] }
+          });
+
+          return res.json({ok:true});
+        }
+
+        return res.status(403).json({erro:"Sem permissão"});
+      }
+    }
+
+    // ------------------ AUXILIARES
+    const auxResp = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: "Relatorio Auxiliares!A2:L",
+    });
+
+    const aux = auxResp.data.values || [];
+
+    for(let i=0;i<aux.length;i++){
+
+      const nomeAux = aux[i][0];
+      const supAux = aux[i][11];
+
+      if(nomeAux === usuario){
+
+        if(isCoord || solicitante === supAux || solicitante === usuario){
+
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: sheetId,
+            range:`Relatorio Auxiliares!B${i+2}`,
+            valueInputOption:"RAW",
+            requestBody:{ values:[[novaSenha]] }
+          });
+
+          return res.json({ok:true});
+        }
+
+        return res.status(403).json({erro:"Sem permissão"});
+      }
+    }
+
+    return res.status(404).json({erro:"Usuário não encontrado"});
+
+  }catch(e){
+    return res.status(500).json({erro:e.message});
+  }
+}
