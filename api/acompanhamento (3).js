@@ -2,7 +2,7 @@ const { google } = require("googleapis");
 
 const SUPERVISORES_LIST = [
   "Erika Silvestre Nunes",
-  "Agata Angel Pereira Oliveira",
+  "Joyce Francieli Silva"",
   "Joyce Carla Santos Marques",
   "Renata Ferreira de Oliveira",
   "Layra da Silva Reginaldo"
