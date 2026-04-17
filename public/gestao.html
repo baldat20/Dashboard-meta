@@ -267,8 +267,17 @@ tbody td{
 
 <script src="gestao.js"></script>
 <script>
-// Exibe botão de Acompanhamento apenas para supervisoras e coord
+function normalize(str) {
+  return (str || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 (function mostrarBotaoAcomp() {
+
   const SUPERVISORES = [
     "Erika Silvestre Nunes",
     "Agata Angel Pereira Oliveira",
@@ -277,10 +286,17 @@ tbody td{
     "Layra da Silva Reginaldo",
     "Leticia Caroline Da Silva"
   ];
+
   const cargo = sessionStorage.getItem("cargo") || localStorage.getItem("cargo") || "";
-  if (SUPERVISORES.includes(cargo)) {
+
+  const isSupervisor = SUPERVISORES.some(nome =>
+    normalize(nome) === normalize(cargo)
+  );
+
+  if (isSupervisor) {
     document.getElementById("btnAcomp").style.display = "inline-block";
   }
+
 })();
 </script>
 </body>
