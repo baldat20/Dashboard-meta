@@ -5,7 +5,8 @@ const SUPERVISORES_LIST = [
   "Agata Angel Pereira Oliveira",
   "Joyce Carla Santos Marques",
   "Renata Ferreira de Oliveira",
-  "Layra da Silva Reginaldo"
+  "Layra da Silva Reginaldo",
+  "Leticia Caroline Da Silva" // ✅ adicionada
 ];
 
 function normalize(str) {
@@ -31,8 +32,6 @@ async function acessarPlanilha() {
 }
 
 // Lê uma aba e retorna array de objetos { nome, nivel, supervisao, cargo }
-// Para analistas: nivel em col[14], supervisao em col[15]
-// Para auxiliares: nivel em col[10], supervisao em col[11]
 async function lerAba(sheets, sheetId, range, tipo) {
   const resp = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
@@ -65,8 +64,12 @@ module.exports = async (req, res) => {
     const cargo = (query.cargo || "").trim();
     const supervisao = query.supervisao || "";
 
-    const isCoord = cargo === "Leticia Caroline Da Silva";
-    const isSupervisora = SUPERVISORES_LIST.includes(cargo);
+    // ✅ corrigido com normalize
+    const isCoord = normalize(cargo) === normalize("Leticia Caroline Da Silva");
+
+    const isSupervisora = SUPERVISORES_LIST
+      .map(normalize)
+      .includes(normalize(cargo));
 
     if (!isCoord && !isSupervisora) {
       return res.status(403).json({ erro: "Acesso não autorizado." });
@@ -77,7 +80,6 @@ module.exports = async (req, res) => {
     const sheets = await acessarPlanilha();
     const sheetId = process.env.SHEET_ID;
 
-    // Lê todos os dados das 6 abas
     const [
       analistasAtual,
       auxAtual,
@@ -94,10 +96,14 @@ module.exports = async (req, res) => {
       lerAba(sheets, sheetId, "META M-2 Auxiliares!A2:L", "auxiliares"),
     ]);
 
-    // Monta mapa nome -> nivel por período e cargo
     function buildMap(arr) {
       const map = {};
-      arr.forEach(r => { map[normalize(r.nome)] = { nivel: r.nivel, supervisao: r.supervisao }; });
+      arr.forEach(r => {
+        map[normalize(r.nome)] = {
+          nivel: r.nivel,
+          supervisao: r.supervisao
+        };
+      });
       return map;
     }
 
@@ -108,47 +114,57 @@ module.exports = async (req, res) => {
     const mapM2Anal    = buildMap(analistasM2);
     const mapM2Aux     = buildMap(auxM2);
 
-    const NIVEL_ORDER = { "SUPERAÇÃO": 1, "DEFINIDA": 2, "TOLERÁVEL": 3, "NÃO ATINGIU": 4 };
+    const NIVEL_ORDER = {
+      "SUPERAÇÃO": 1,
+      "DEFINIDA": 2,
+      "TOLERÁVEL": 3,
+      "NÃO ATINGIU": 4
+    };
 
     function calcTendencia(m2, m1, atual) {
       const v2 = NIVEL_ORDER[m2] || 0;
       const v1 = NIVEL_ORDER[m1] || 0;
       const va = NIVEL_ORDER[atual] || 0;
+
       if (!v2 && !v1 && !va) return "sem_dados";
+
       const vals = [v2, v1, va].filter(v => v > 0);
+
       if (vals.length < 2) return "neutro";
+
       const primeiro = vals[0];
       const ultimo = vals[vals.length - 1];
+
       if (ultimo < primeiro) return "melhora";
       if (ultimo > primeiro) return "piora";
-      // Verifica desvio intermediário
-      if (vals.length === 3 && (vals[1] !== vals[0] || vals[1] !== vals[2])) return "instavel";
+
+      if (vals.length === 3 && (vals[1] !== vals[0] || vals[1] !== vals[2])) {
+        return "instavel";
+      }
+
       return "estavel";
     }
 
     function montarColaboradores(mapAtual, mapM1, mapM2, tipoStr, supervisorFiltro) {
-      // Usa como base o mês atual
       const todos = Object.entries(mapAtual)
         .filter(([nome, data]) => {
           if (!supervisorFiltro) return true;
           return normalize(data.supervisao) === normalize(supervisorFiltro);
         })
         .map(([nomeNorm, data]) => {
-          // Busca nome original
           const nomeOriginal = (tipoStr === "analista" ? analistasAtual : auxAtual)
             .find(r => normalize(r.nome) === nomeNorm)?.nome || nomeNorm;
 
           const m2 = mapM2[nomeNorm]?.nivel || "";
           const m1 = mapM1[nomeNorm]?.nivel || "";
           const atual = data.nivel || "";
-          const tendencia = calcTendencia(m2, m1, atual);
 
           return {
             nome: nomeOriginal,
             cargo: tipoStr,
             supervisao: data.supervisao,
             historico: { m2, m1, atual },
-            tendencia
+            tendencia: calcTendencia(m2, m1, atual)
           };
         });
 
@@ -161,7 +177,6 @@ module.exports = async (req, res) => {
       return { analistas, auxiliares };
     }
 
-    // Coord sem filtro: retorna todas supervisões
     if (isCoord && !targetSup) {
       const resultado = {};
       for (const sup of SUPERVISORES_LIST) {
@@ -170,7 +185,6 @@ module.exports = async (req, res) => {
       return res.json({ supervisores: resultado });
     }
 
-    // Coord com filtro ou supervisora
     const sup = targetSup;
     return res.json({ supervisao: sup, ...montarPorSupervisao(sup) });
 
