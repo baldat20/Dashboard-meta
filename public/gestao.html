@@ -55,10 +55,25 @@ header.topbar h1{
   border-radius:8px;
   font-weight:700;
   cursor:pointer;
+  font-family:inherit;
 }
 
 .btn-dark{
   background:#1f1f1f;
+}
+
+/* Botão Acompanhamento — destaque verde */
+.btn-acomp{
+  background: #1db954;
+  border: none;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  display: none; /* mostrado via JS só pra gestores */
 }
 
 .subbar{
@@ -92,6 +107,7 @@ header.topbar h1{
   justify-content:space-between;
   align-items:center;
   box-shadow:0 6px 14px rgba(0,0,0,0.15);
+  font-family:inherit;
 }
 
 .sup-count{
@@ -117,6 +133,7 @@ header.topbar h1{
   background:white;
   cursor:pointer;
   box-shadow:0 4px 10px rgba(0,0,0,0.15);
+  font-family:inherit;
 }
 
 /* tabs */
@@ -134,6 +151,7 @@ header.topbar h1{
   font-weight:700;
   border:2px solid rgba(0,0,0,0.06);
   cursor:pointer;
+  font-family:inherit;
 }
 
 .tab-btn.active{
@@ -193,6 +211,7 @@ tbody td{
   font-weight:800;
   cursor:pointer;
   box-shadow:0 8px 16px rgba(0,0,0,0.2);
+  font-family:inherit;
 }
 </style>
 </head>
@@ -205,6 +224,8 @@ tbody td{
 
   <div class="top-actions">
     <button class="btn btn-dark" onclick="trocarMinhaSenha()">Alterar minha senha</button>
+    <!-- Botão Acompanhamento – visível só para supervisoras/coord -->
+    <button class="btn-acomp" id="btnAcomp" onclick="window.location.href='acompanhamento.html'">📊 Acompanhamento</button>
     <button class="btn" onclick="abrirCredenciais()">Credenciais</button>
     <div id="supNome"></div>
   </div>
@@ -245,5 +266,22 @@ tbody td{
 <button class="floating-sair" onclick="window.location.href='index.html'">SAIR</button>
 
 <script src="gestao.js"></script>
+<script>
+// Exibe botão de Acompanhamento apenas para supervisoras e coord
+(function mostrarBotaoAcomp() {
+  const SUPERVISORES = [
+    "Erika Silvestre Nunes",
+    "Agata Angel Pereira Oliveira",
+    "Joyce Carla Santos Marques",
+    "Renata Ferreira de Oliveira",
+    "Layra da Silva Reginaldo",
+    "Leticia Caroline Da Silva"
+  ];
+  const cargo = sessionStorage.getItem("cargo") || localStorage.getItem("cargo") || "";
+  if (SUPERVISORES.includes(cargo)) {
+    document.getElementById("btnAcomp").style.display = "inline-block";
+  }
+})();
+</script>
 </body>
 </html>
